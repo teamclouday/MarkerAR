@@ -1,0 +1,12 @@
+[submodule "PC/external/glew-cmake"]
+	path = PC/external/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "PC/external/glfw"]
+	path = PC/external/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "PC/external/glm"]
+	path = PC/external/glm
+	url = https://github.com/teamclouday/glm.git
+[submodule "PC/external/imgui"]
+	path = PC/external/imgui
+	url = https://github.com/ocornut/imgui.git
