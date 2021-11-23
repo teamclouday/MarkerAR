@@ -10,7 +10,7 @@ public:
     Marker(int width, int height);
     ~Marker();
 
-    void process(GLuint sourceImg);
+    void process(GLuint sourceImg, int groupX, int groupY);
 
     // fetch texture and update index
     GLuint fetchTex()
@@ -20,13 +20,14 @@ public:
         return tex;
     }
     // only get current texture
-    GLuint currentTex() {return _tex[_currentTex];}
     GLuint lastTex() {return _tex[!_currentTex];}
+    bool debug() {return _debug_mode;}
 
     void UI();
 
+
 private:
-    int _width, _height, _groupX, _groupY;
+    int _width, _height;
     GLuint _tex[2];
     int _currentTex = 0;
     std::shared_ptr<Shader> _shader1, _shader2;
@@ -34,4 +35,7 @@ private:
     int _gray_shades = 1;
     float _threshold = 0.5f;
     bool _auto_threshold = true;
+
+    int _debug_level = 0;
+    bool _debug_mode = false;
 };

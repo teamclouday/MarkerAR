@@ -12,7 +12,9 @@ void main()
     ivec2 baseUV = ivec2(gl_GlobalInvocationID.xy);
     baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn));
     vec3 imgColor = imageLoad(imageIn, baseUV).rgb;
-    float grayscale = dot(imgColor, vec3(0.33333333));
+    // float grayscale = dot(imgColor, vec3(0.33333333));
+    // https://en.wikipedia.org/wiki/Luma_(video)
+    float grayscale = dot(imgColor, vec3(0.299, 0.587, 0.114));
     if(shades > 1)
     {
         float convert = 1.0 / (shades - 1.0);

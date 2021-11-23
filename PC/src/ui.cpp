@@ -6,6 +6,13 @@
 void Camera::UI()
 {
     ImGui::Text("Capture Size: %dx%d", _width, _height);
+    ImGui::Checkbox("Denoising", &_denoise);
+    if(_denoise)
+    {
+        ImGui::DragFloat("Denoise Threshold", &_threshold, 0.001f, 0.001f, 0.5f, "%.3f");
+        ImGui::DragFloat("Denoise Sigma", &_sigma, 0.01f, 0.001f, 5.0f, "%.2f");
+        ImGui::DragFloat("Denoise kSigma", &_kSigma, 0.01f, 0.001f, 10.0f, "%.2f");
+    }
 }
 
 void Context::UI()
@@ -25,4 +32,12 @@ void Marker::UI()
     if(!_auto_threshold)
         ImGui::DragFloat("Manual", &_threshold, 0.001f, 0.0f, 1.0f, "%.3f");
     ImGui::Separator();
+
+
+    ImGui::Checkbox("Debug Mode", &_debug_mode);
+    if(_debug_mode)
+    {
+        ImGui::RadioButton("Grayscale", &_debug_level, 0);
+        ImGui::RadioButton("Thresholding", &_debug_level, 1);
+    }
 }

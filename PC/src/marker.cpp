@@ -3,8 +3,6 @@
 
 Marker::Marker(int width, int height) : _width(width), _height(height)
 {
-    _groupX = static_cast<int>(std::ceil(width / 32.0f));
-    _groupY = static_cast<int>(std::ceil(height / 32.0f));
     // initialize texture buffer
     glGenTextures(2, _tex);
     for(int i = 0; i < 2; i++)
@@ -31,7 +29,7 @@ Marker::~Marker()
     glDeleteTextures(2, _tex);
 }
 
-void Marker::process(GLuint sourceImg)
+void Marker::process(GLuint sourceImg, int groupX, int groupY)
 {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     // step 1: convert rgb image to grayscale
@@ -40,10 +38,10 @@ void Marker::process(GLuint sourceImg)
     glBindImageTexture(1, fetchTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     _shader1->uniformInt("shades", _gray_shades);
     glDispatchCompute(
-        static_cast<GLuint>(_groupX),
-        static_cast<GLuint>(_groupY), 1);
+        static_cast<GLuint>(groupX),
+        static_cast<GLuint>(groupY), 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    return;
+    if(_debug_mode && _debug_level == 0) return;
     // step 2: convert grayscale to black-white
     if(_auto_threshold)
     {
@@ -55,7 +53,8 @@ void Marker::process(GLuint sourceImg)
     glBindImageTexture(1, fetchTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     _shader2->uniformFloat("threshold", _threshold);
     glDispatchCompute(
-        static_cast<GLuint>(_groupX),
-        static_cast<GLuint>(_groupY), 1);
+        static_cast<GLuint>(groupX),
+        static_cast<GLuint>(groupY), 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    if(_debug_mode && _debug_level == 1) return;
 }

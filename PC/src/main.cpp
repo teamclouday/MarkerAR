@@ -73,15 +73,20 @@ int main()
         // fetch latest image
         cam->update();
         // process image
-        marker->process(cam->texture());
+        marker->process(
+            cam->lastTex(),
+            cam->groupX(),
+            cam->groupY()
+        );
         // render camera frome to screen
         glUseProgram(render->program());
         glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, cam->texture());
-        glBindTexture(GL_TEXTURE_2D, marker->lastTex());
+        glBindTexture(GL_TEXTURE_2D, marker->debug() ?
+            marker->lastTex() : cam->lastTex());
         render->uniformInt("image", 0);
         render->uniformFloat("ratio_img", cam->ratio());
         render->uniformFloat("ratio_win", con->ratio());
+        render->uniformBool("debug", marker->debug());
         cam->draw();
         glUseProgram(0);
         con->endFrame(renderUI);
