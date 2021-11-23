@@ -15,7 +15,6 @@ public:
         // set properties
         _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-        _fps = static_cast<float>(_cam.get(cv::CAP_PROP_FPS));
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
         _height = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_HEIGHT));
         _ratio = static_cast<float>(_width) / _height;
@@ -86,7 +85,7 @@ public:
 
 private:
     int _width, _height;
-    float _ratio, _fps;
+    float _ratio;
     cv::VideoCapture _cam;
     cv::Mat _frame;
     GLuint _tex, _vao;

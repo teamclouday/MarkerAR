@@ -5,7 +5,6 @@
 void Camera::UI()
 {
     ImGui::Text("Capture Size: %dx%d", _width, _height);
-    ImGui::Text("Capture FPS: %.2f", _fps);
 }
 
 void Context::UI()
