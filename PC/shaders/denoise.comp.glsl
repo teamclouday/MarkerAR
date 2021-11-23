@@ -1,3 +1,4 @@
+// this shader denoise an image by applying spatial filter with guassian kernel
 #version 450 core
 
 #define INV_PI          0.31830988618379067153776752674503

@@ -3,16 +3,20 @@
 
 Marker::Marker(int width, int height) : _width(width), _height(height)
 {
+    _auto_threshold_level = 1 + static_cast<int>(
+        std::floorf(std::log2f(static_cast<float>(std::max(width, height))))
+    );
     // initialize texture buffer
     glGenTextures(2, _tex);
     for(int i = 0; i < 2; i++)
     {
         glBindTexture(GL_TEXTURE_2D, _tex[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexStorage2D(GL_TEXTURE_2D, _auto_threshold_level, GL_R32F, width, height);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, width, height);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     // prepare threshold shader
@@ -45,8 +49,9 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
     // step 2: convert grayscale to black-white
     if(_auto_threshold)
     {
-        // choose a threshold
-
+        // set threshold as the average (top level of mipmap) value
+        glGenerateTextureMipmap(lastTex());
+        glGetTextureImage(lastTex(), _auto_threshold_level-1, GL_RED, GL_FLOAT, 4, &_threshold);
     }
     glUseProgram(_shader2->program());
     glBindImageTexture(0, lastTex(),  0, GL_FALSE, 0, GL_READ_ONLY,  GL_R32F);

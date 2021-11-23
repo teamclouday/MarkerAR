@@ -35,6 +35,7 @@ private:
     int _gray_shades = 1;
     float _threshold = 0.5f;
     bool _auto_threshold = true;
+    int _auto_threshold_level = 0;
 
     int _debug_level = 0;
     bool _debug_mode = false;
