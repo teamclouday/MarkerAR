@@ -14,7 +14,7 @@ Marker::Marker(int width, int height) : _width(width), _height(height)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R8, width, height);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, width, height);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     // prepare threshold shader
@@ -28,7 +28,7 @@ Marker::Marker(int width, int height) : _width(width), _height(height)
 
 Marker::~Marker()
 {
-    glDeleteTextures(1, _tex);
+    glDeleteTextures(2, _tex);
 }
 
 void Marker::process(GLuint sourceImg)
@@ -37,7 +37,7 @@ void Marker::process(GLuint sourceImg)
     // step 1: convert rgb image to grayscale
     glUseProgram(_shader1->program());
     glBindImageTexture(0, sourceImg,    0, GL_FALSE, 0, GL_READ_ONLY,  GL_RGBA32F);
-    glBindImageTexture(1, currentTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8);
+    glBindImageTexture(1, currentTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     glDispatchCompute(
         static_cast<GLuint>(_groupX),
         static_cast<GLuint>(_groupY), 1);
@@ -50,8 +50,8 @@ void Marker::process(GLuint sourceImg)
 
     }
     glUseProgram(_shader2->program());
-    glBindImageTexture(0, currentTex(), 0, GL_FALSE, 0, GL_READ_ONLY,  GL_R8);
-    glBindImageTexture(1, fetchTex(),   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8);
+    glBindImageTexture(0, currentTex(), 0, GL_FALSE, 0, GL_READ_ONLY,  GL_R32F);
+    glBindImageTexture(1, fetchTex(),   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     _shader2->uniformFloat("threshold", _threshold);
     glDispatchCompute(
         static_cast<GLuint>(_groupX),

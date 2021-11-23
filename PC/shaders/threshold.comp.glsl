@@ -2,8 +2,8 @@
 
 layout (local_size_x=32, local_size_y=32, local_size_z=1) in;
 
-layout (r8, binding=0) readonly  uniform image2D imageIn;
-layout (r8, binding=1) writeonly uniform image2D imageOut;
+layout (r32f, binding=0) readonly  uniform image2D imageIn;
+layout (r32f, binding=1) writeonly uniform image2D imageOut;
 
 uniform float threshold;
 
