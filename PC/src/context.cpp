@@ -23,6 +23,7 @@ Context::Context(const std::string& title)
     glfwSetWindowUserPointer(_window, this);
     glfwMakeContextCurrent(_window);
     glfwSetKeyCallback(_window, glfw_key_callback);
+    glfwSwapInterval(1);
     // init opengl context
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK)
@@ -81,6 +82,6 @@ void Context::endFrame(std::function<void()> customUI)
     glfwSwapBuffers(_window);
     // fps control
     double elapsed = glfwGetTime() - _timer;
-    // if(elapsed < CONTEXT_SPF)
-    //     std::this_thread::sleep_for(std::chrono::duration<double>(CONTEXT_SPF - elapsed));
+    if(elapsed < CONTEXT_SPF)
+        std::this_thread::sleep_for(std::chrono::duration<double>(CONTEXT_SPF - elapsed));
 }
