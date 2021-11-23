@@ -14,7 +14,6 @@ public:
             throw std::runtime_error("Failed to open camera!");
         // set properties
         _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
-        _cam.set(cv::CAP_PROP_FPS, 10); // set fps before set fourcc
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
         _fps = static_cast<float>(_cam.get(cv::CAP_PROP_FPS));
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
