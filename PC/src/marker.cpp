@@ -4,7 +4,7 @@
 Marker::Marker(int width, int height) : _width(width), _height(height)
 {
     _auto_threshold_level = 1 + static_cast<int>(
-        std::floorf(std::log2f(static_cast<float>(std::max(width, height))))
+        std::floor(std::log2(static_cast<double>(std::max(width, height))))
     );
     // initialize texture buffer
     glGenTextures(2, _tex);
