@@ -11,10 +11,10 @@ public:
     {
         // open default camera
         if(!_cam.open(0, cv::CAP_ANY) || !_cam.isOpened())
-            throw std::exception("Failed to open camera!");
+            throw std::runtime_error("Failed to open camera!");
         // set properties
         _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
-        _cam.set(cv::CAP_PROP_FPS, 20); // set fps before set fourcc
+        _cam.set(cv::CAP_PROP_FPS, 10); // set fps before set fourcc
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
         _fps = static_cast<float>(_cam.get(cv::CAP_PROP_FPS));
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
@@ -25,13 +25,13 @@ public:
         glBindTexture(GL_TEXTURE_2D, _tex);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_BGR, GL_UNSIGNED_BYTE, nullptr);
         glBindTexture(GL_TEXTURE_2D, 0);
         // try to get first frame
         if(!update())
-            throw std::exception("Failed to get frame from camera!");
+            throw std::runtime_error("Failed to get frame from camera!");
         // init VAO
         const float vertices[] = {
             -1.0f, -1.0f,

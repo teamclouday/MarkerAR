@@ -26,7 +26,7 @@ public:
         if(!inFile.is_open())
         {
             std::string errorContent = "Failed to open file: " + source;
-            throw std::exception(errorContent.c_str());
+            throw std::runtime_error(errorContent);
         }
         buffer << inFile.rdbuf();
 
@@ -45,7 +45,7 @@ public:
             std::vector<GLchar> infoLog(infoLen+1);
             glGetShaderInfoLog(shader, infoLen, nullptr, &infoLog[0]);
             std::string content = std::string("Shader failed to compile: ") + std::string(&infoLog[0]);
-            throw std::exception(content.c_str());
+            throw std::runtime_error(content);
         }
 
         _shaders.push_back(shader);
@@ -68,7 +68,7 @@ public:
             std::vector<GLchar> infoLog(infoLen+1);
             glGetProgramInfoLog(_program, infoLen, nullptr, &infoLog[0]);
             std::string content = std::string("Shader failed to link: ") + std::string(&infoLog[0]);
-            throw std::exception(content.c_str());
+            throw std::runtime_error(content);
         }
 
         for(auto& shader : _shaders) glDeleteShader(shader);
@@ -77,19 +77,19 @@ public:
         compiled = true;
     }
 
-    void Shader::uniformBool(const char* name, bool val) const
+    void uniformBool(const char* name, bool val) const
     {
         if(!compiled) return;
         glUniform1i(glGetUniformLocation(_program, name), static_cast<int>(val));
     }
 
-    void Shader::uniformInt(const char* name, int val) const
+    void uniformInt(const char* name, int val) const
     {
         if(!compiled) return;
         glUniform1i(glGetUniformLocation(_program, name), val);
     }
 
-    void Shader::uniformFloat(const char* name, float val) const
+    void uniformFloat(const char* name, float val) const
     {
         if(!compiled) return;
         glUniform1f(glGetUniformLocation(_program, name), val);

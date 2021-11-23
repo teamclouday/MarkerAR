@@ -5,6 +5,52 @@
 #include <stdexcept>
 #include <thread>
 #include <chrono>
+#include <iostream>
+
+void GLAPIENTRY GLDebugCallback(
+    GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar* message, const void* userParam
+)
+{
+    std::cout << "**** GL Callback ****" << std::endl;
+    std::cout << "(";
+    switch(severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:            std::cout << "High"; break;
+        case GL_DEBUG_SEVERITY_LOW:             std::cout << "Low"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:          std::cout << "Med"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:    std::cout << "Noti"; break;
+    }
+    std::cout << ") ";
+    std::cout << "<";
+    switch(source)
+    {
+        case GL_DEBUG_SOURCE_API:               std::cout << "API"; break;
+        case GL_DEBUG_SOURCE_APPLICATION:       std::cout << "Application"; break;
+        case GL_DEBUG_SOURCE_OTHER:             std::cout << "Other"; break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:   std::cout << "Shader Compiler"; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:       std::cout << "Third Party"; break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     std::cout << "Window System"; break;
+    }
+    std::cout << "> ";
+    std::cout << "[";
+    switch(type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               std::cout << "Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              std::cout << "Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               std::cout << "Other"; break;
+    }
+    std::cout << "] " << std::endl;
+    std::cout << message << std::endl;
+}
+
+
 
 Context::Context(const std::string& title)
 {
@@ -14,12 +60,12 @@ Context::Context(const std::string& title)
     _ratio = 800.0f / 600.0f;
     _title = title;
     if(!glfwInit())
-        throw std::exception("Failed to init GLFW!");
+        throw std::runtime_error("Failed to init GLFW!");
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     _window = glfwCreateWindow(_winWidth, _winHeight, _title.c_str(), nullptr, nullptr);
     if(!_window)
-        throw std::exception("Failed to create GLFW window!");
+        throw std::runtime_error("Failed to create GLFW window!");
     glfwSetWindowUserPointer(_window, this);
     glfwMakeContextCurrent(_window);
     glfwSetKeyCallback(_window, glfw_key_callback);
@@ -27,12 +73,17 @@ Context::Context(const std::string& title)
     // init opengl context
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK)
-        throw std::exception("Failed to init GLEW!");
+        throw std::runtime_error("Failed to init GLEW!");
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glDebugMessageCallback(GLDebugCallback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
     // init imgui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
