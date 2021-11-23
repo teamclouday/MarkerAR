@@ -7,6 +7,5 @@ uniform sampler2D image;
 
 void main()
 {
-    vec3 imgColor = texture(image, imgUV).rgb;
-    color = vec4(imgColor, 1.0);
+    color = vec4(texture(image, imgUV).rrr, 1.0);
 }

@@ -2,6 +2,7 @@
 #include "camera.hpp"
 #include "model.hpp"
 #include "shader.hpp"
+#include "marker.hpp"
 
 #include <GL/glew.h>
 #include <imgui.h>
@@ -14,6 +15,7 @@ int main()
 {
     std::shared_ptr<Context> con;
     std::shared_ptr<Camera> cam;
+    std::shared_ptr<Marker> marker;
     std::shared_ptr<Shader> render;
 
     // initialze all
@@ -21,6 +23,10 @@ int main()
     {
         con = std::make_shared<Context>("Marker");
         cam = std::make_shared<Camera>();
+        marker = std::make_shared<Marker>(
+            cam->width(),
+            cam->height()
+        );
         render = std::make_shared<Shader>();
         render->add("shaders/render.vert.glsl", GL_VERTEX_SHADER);
         render->add("shaders/render.frag.glsl", GL_FRAGMENT_SHADER);
@@ -59,11 +65,15 @@ int main()
     while(con->loop())
     {
         con->beginFrame();
+        // fetch latest image
         cam->update();
+        // process image
+        marker->process(cam->texture());
         // render camera frome to screen
         glUseProgram(render->program());
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cam->texture());
+        // glBindTexture(GL_TEXTURE_2D, cam->texture());
+        glBindTexture(GL_TEXTURE_2D, marker->currentTex());
         render->uniformInt("image", 0);
         render->uniformFloat("ratio_img", cam->ratio());
         render->uniformFloat("ratio_win", con->ratio());
