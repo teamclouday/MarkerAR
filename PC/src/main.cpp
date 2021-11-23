@@ -56,6 +56,11 @@ int main()
                 cam->UI();
                 ImGui::EndTabItem();
             }
+            if(ImGui::BeginTabItem("Marker"))
+            {
+                marker->UI();
+                ImGui::EndTabItem();
+            }
             ImGui::EndTabBar();
         }
         ImGui::End();
@@ -73,7 +78,7 @@ int main()
         glUseProgram(render->program());
         glActiveTexture(GL_TEXTURE0);
         // glBindTexture(GL_TEXTURE_2D, cam->texture());
-        glBindTexture(GL_TEXTURE_2D, marker->currentTex());
+        glBindTexture(GL_TEXTURE_2D, marker->lastTex());
         render->uniformInt("image", 0);
         render->uniformFloat("ratio_img", cam->ratio());
         render->uniformFloat("ratio_win", con->ratio());

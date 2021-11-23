@@ -37,7 +37,8 @@ void Marker::process(GLuint sourceImg)
     // step 1: convert rgb image to grayscale
     glUseProgram(_shader1->program());
     glBindImageTexture(0, sourceImg,    0, GL_FALSE, 0, GL_READ_ONLY,  GL_RGBA32F);
-    glBindImageTexture(1, currentTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    glBindImageTexture(1, fetchTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    _shader1->uniformInt("shades", _gray_shades);
     glDispatchCompute(
         static_cast<GLuint>(_groupX),
         static_cast<GLuint>(_groupY), 1);
@@ -50,8 +51,8 @@ void Marker::process(GLuint sourceImg)
 
     }
     glUseProgram(_shader2->program());
-    glBindImageTexture(0, currentTex(), 0, GL_FALSE, 0, GL_READ_ONLY,  GL_R32F);
-    glBindImageTexture(1, fetchTex(),   0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+    glBindImageTexture(0, lastTex(),  0, GL_FALSE, 0, GL_READ_ONLY,  GL_R32F);
+    glBindImageTexture(1, fetchTex(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
     _shader2->uniformFloat("threshold", _threshold);
     glDispatchCompute(
         static_cast<GLuint>(_groupX),

@@ -21,6 +21,9 @@ public:
     }
     // only get current texture
     GLuint currentTex() {return _tex[_currentTex];}
+    GLuint lastTex() {return _tex[!_currentTex];}
+
+    void UI();
 
 private:
     int _width, _height, _groupX, _groupY;
@@ -28,6 +31,7 @@ private:
     int _currentTex = 0;
     std::shared_ptr<Shader> _shader1, _shader2;
 
+    int _gray_shades = 1;
     float _threshold = 0.5f;
     bool _auto_threshold = true;
 };
