@@ -29,6 +29,6 @@ void main()
         }
     }
 
-    imgColor = (count >= 4 && count <= 5 && !onBorder) ? 1.0 : 0.0;
+    imgColor = (count <= 6 && !onBorder) ? 1.0 : 0.0;
     imageStore(imageOut, baseUV, vec4(imgColor));
 }

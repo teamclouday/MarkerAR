@@ -9,7 +9,7 @@ Marker::Marker(int width, int height) : _width(width), _height(height)
     _auto_threshold_level = 1 + static_cast<int>(
         std::floor(std::log2(static_cast<double>(std::max(width, height))))
     );
-    _boxesX = static_cast<int>(std::ceil(width / 160.0)); // 16 subgroup, 10 areas
+    _boxesX = static_cast<int>(std::ceil(width / 160.0)); // 16 subgroup, each index manage 10x10 space
     _boxesY = static_cast<int>(std::ceil(height / 160.0));
     _boxes.resize(_boxesX * _boxesY);
     // initialize texture buffer
@@ -117,11 +117,12 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
     std::memcpy(_boxes.data(), bufferPtr, sizeof(BoxData) * _boxes.size());
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    for(auto& box : _boxes)
+    for(size_t i = 0; i < _boxes.size(); i++)
     {
+        auto& box = _boxes[i];
         if(box.p1.x >= 0)
         {
-            std::cout << "Box Found:\n" << box.p1.x << "," << box.p1.y << "\n" <<
+            std::cout << "Box " << i <<  " Found:\n" << box.p1.x << "," << box.p1.y << "\n" <<
                 box.p2.x << "," << box.p2.y << "\n" <<
                 box.p3.x << "," << box.p3.y << "\n" <<
                 box.p4.x << "," << box.p4.y << "\n";
@@ -133,6 +134,7 @@ void Marker::drawCorners(float ratioCon, float ratioCam)
 {
     if(_debug_mode && _debug_level == 3)
     {
+        glLineWidth(2.0f);
         glUseProgram(_shaderDraw->program());
         _shaderDraw->uniformFloat("ratio_img", ratioCam);
         _shaderDraw->uniformFloat("ratio_win", ratioCon);
