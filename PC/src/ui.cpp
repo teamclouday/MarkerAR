@@ -26,6 +26,13 @@ void Marker::UI()
 {
     ImGui::Text("Grayscale");
     ImGui::DragInt("Shades", &_gray_shades, 1.0f, 1, 50);
+    ImGui::Checkbox("Blur Filter", &_blur);
+    if(_blur)
+    {
+        ImGui::DragFloat("Blur Radius", &_blur_radius, 0.01f, 0.01f, 10.0f, "%.2f");
+        ImGui::DragFloat("Blur Quality", &_blur_quality, 0.01f, 0.01f, 10.0f, "%.2f");
+        ImGui::DragFloat("Blur Directions", &_blur_directions, 1.0f, 1.0f, 20.0f, "%.0f");
+    }
     ImGui::Separator();
     ImGui::Text("Thresholding");
     ImGui::Checkbox("Auto", &_auto_threshold);
@@ -39,5 +46,7 @@ void Marker::UI()
     {
         ImGui::RadioButton("Grayscale", &_debug_level, 0);
         ImGui::RadioButton("Thresholding", &_debug_level, 1);
+        ImGui::RadioButton("Contour Edge", &_debug_level, 2);
+        ImGui::RadioButton("Box Detect", &_debug_level, 3);
     }
 }

@@ -44,7 +44,8 @@ public:
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
             std::vector<GLchar> infoLog(infoLen+1);
             glGetShaderInfoLog(shader, infoLen, nullptr, &infoLog[0]);
-            std::string content = std::string("Shader failed to compile: ") + std::string(&infoLog[0]);
+            std::string content = "Shader " + source + " failed to compile: " +
+                std::string(&infoLog[0]);
             throw std::runtime_error(content);
         }
 

@@ -18,6 +18,8 @@ public:
     void beginFrame();
     void endFrame(std::function<void()> customUI = nullptr);
     float ratio() const {return _ratio;}
+    float width() const {return _winWidth;}
+    float height() const {return _winHeight;}
 
     void UI();
 

@@ -89,6 +89,7 @@ int main()
         render->uniformBool("debug", marker->debug());
         cam->draw();
         glUseProgram(0);
+        marker->drawCorners(con->ratio(), cam->ratio());
         con->endFrame(renderUI);
     }
 
