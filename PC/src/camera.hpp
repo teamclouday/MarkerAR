@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <memory>
 #include <cmath>
+#include <string>
 #include "shader.hpp"
 
 class Camera
@@ -12,11 +13,16 @@ class Camera
 public:
     Camera()
     {
-        // open default camera
-        if(!_cam.open(0, cv::CAP_V4L2) || !_cam.isOpened())
+        // try to open camera
+        // first try directshow for Windows
+        // next try V4L2 for Linux
+        // finally autodetect
+        if(!_cam.open(0, cv::CAP_DSHOW) &&
+           !_cam.open(0, cv::CAP_V4L2) &&
+           !_cam.open(0, cv::CAP_ANY))
             throw std::runtime_error("Failed to open camera!");
+        _backend = _cam.getBackendName();
         // set properties
-        // _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
         _cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
@@ -134,4 +140,5 @@ private:
     std::shared_ptr<Shader> _denoise_shader;
     bool _denoise = false;
     float _sigma = 3.0f, _kSigma = 6.0f, _threshold = 0.1f;
+    std::string _backend;
 };

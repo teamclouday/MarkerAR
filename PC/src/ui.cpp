@@ -5,6 +5,7 @@
 
 void Camera::UI()
 {
+    ImGui::Text("OpenCV Backend: %s", _backend.c_str());
     ImGui::Text("Capture Size: %dx%d", _width, _height);
     ImGui::Checkbox("Denoising", &_denoise);
     if(_denoise)

@@ -5,8 +5,8 @@
 #include <string>
 #include <functional>
 
-#define CONTEXT_FPS 60
-#define CONTEXT_SPF 0.01666666
+#define CONTEXT_FPS 30
+#define CONTEXT_SPF 0.03333333333
 
 class Context
 {

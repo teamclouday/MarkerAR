@@ -20,7 +20,6 @@ add_definitions(-D_UNICODE)
 add_definitions(-DGLEW_STATIC)
 
 find_package(OpenGL REQUIRED)
-set(OpenCV_STATIC ON)
 find_package(OpenCV REQUIRED PATHS C:/OpenCV/opencv/build/x64/vc15/lib) # have to specify path here otherwise it won't work
 option(glew-cmake_BUILD_SHARED "Build the shared glew library" OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/glew-cmake)
