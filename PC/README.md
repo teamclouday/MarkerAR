@@ -4,7 +4,7 @@ Implementation on PC (linux & windows)
 
 ------
 
-### Compile
+To compile from source:
 
 1. Init submodules
    ```bash
