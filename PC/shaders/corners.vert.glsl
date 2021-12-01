@@ -16,5 +16,5 @@ void main()
     {
         pos.x = pos.x * ratio_img / ratio_win;
     }
-    gl_Position = vec4(pos, -0.1, 1.0);
+    gl_Position = vec4(pos, 0.0, 1.0);
 }

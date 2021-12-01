@@ -76,7 +76,7 @@ Context::Context(const std::string& title)
     if(glewInit() != GLEW_OK)
         throw std::runtime_error("Failed to init GLEW!");
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
