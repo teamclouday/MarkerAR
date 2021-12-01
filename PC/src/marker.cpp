@@ -414,7 +414,40 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
         if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p1);
-    // step5: store data
+    // step 5: determine orientation of the marker
+    // p1 near the black area
+    glm::ivec2 sampleP2 = glm::ivec2(glm::round((track[p2] + centeroid) * 0.5f));
+    glm::ivec2 sampleP3 = glm::ivec2(glm::round((track[p3] + centeroid) * 0.5f));
+    glm::ivec2 sampleP4 = glm::ivec2(glm::round((track[p4] + centeroid) * 0.5f));
+    if(_image_data[sampleP2.x + sampleP2.y * _width] <= 0)
+    {
+        // if P2 is near black area
+        int tmp = p1;
+        p1 = p2;
+        p2 = p4;
+        p4 = p3;
+        p3 = tmp;
+    }
+    else if(_image_data[sampleP3.x + sampleP3.y * _width] <= 0)
+    {
+        // if P3 is near black area
+        int tmp = p1;
+        p1 = p3;
+        p3 = p4;
+        p4 = p2;
+        p2 = tmp;
+    }
+    else if(_image_data[sampleP4.x + sampleP4.y * _width] <= 0)
+    {
+        // if P4 is near black area
+        int tmp = p1;
+        p1 = p4;
+        p4 = tmp;
+        tmp = p3;
+        p3 = p2;
+        p2 = tmp;
+    }
+    // step 6: update and store data
     _marker_borderp1p2.x = track[p1].x / _width;
     _marker_borderp1p2.y = track[p1].y / _height;
     _marker_borderp1p2.z = track[p2].x / _width;

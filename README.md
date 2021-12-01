@@ -25,7 +25,9 @@ The marker I'm using is simply like this:
 
 4. Fit quadrilateral to the closed contour and get 4 corners  
    Following the algorithm mentioned in Chapter 4  
-   (OpenCV uses Ramer–Douglas–Peucker algorithm, which is redundant for my case)
+   (OpenCV uses Ramer–Douglas–Peucker algorithm, which is redundant for my case)  
+
+5. Determine orientation by sampling near the corners
 
 ### Pose Estimation
 
