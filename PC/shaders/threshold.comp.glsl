@@ -11,7 +11,7 @@ uniform float threshold;
 void main()
 {
     ivec2 baseUV = ivec2(gl_GlobalInvocationID.xy);
-    baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn));
+    baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn) - ivec2(1));
     float imgColor = imageLoad(imageIn, baseUV).r;
     imgColor = sign(imgColor - threshold);
     imageStore(imageOut, baseUV, vec4(imgColor));

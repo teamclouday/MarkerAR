@@ -31,7 +31,7 @@ void Marker::UI()
     {
         ImGui::DragFloat("Blur Radius", &_blur_radius, 0.01f, 0.01f, 10.0f, "%.2f");
         ImGui::DragFloat("Blur Quality", &_blur_quality, 0.01f, 0.01f, 10.0f, "%.2f");
-        ImGui::DragFloat("Blur Directions", &_blur_directions, 1.0f, 1.0f, 20.0f, "%.0f");
+        ImGui::DragFloat("Blur Directions", &_blur_directions, 1.0f, 1.0f, 12.0f, "%.0f");
     }
     ImGui::Separator();
     ImGui::Text("Thresholding");
@@ -39,14 +39,20 @@ void Marker::UI()
     if(!_auto_threshold)
         ImGui::DragFloat("Manual", &_threshold, 0.001f, 0.0f, 1.0f, "%.3f");
     ImGui::Separator();
-
-
+    ImGui::Text("Contour Tracing");
+    ImGui::DragInt("Max Iteration", &_tracing_max_iter, 5.0f, 200, 10000);
+    ImGui::DragInt("Min Contour Length", &_tracing_thres_contour, 5.0f, 10, 5000);
+    ImGui::DragFloat("Min Quadra Distance", &_tracing_thres_quadra, 0.01f, 0.01f, 20.0f, "%.2f");
+    ImGui::Text("p1 = (%.3f, %.3f)", _marker_borderp1p2.x, _marker_borderp1p2.y);
+    ImGui::Text("p2 = (%.3f, %.3f)", _marker_borderp1p2.z, _marker_borderp1p2.w);
+    ImGui::Text("p3 = (%.3f, %.3f)", _marker_borderp3p4.x, _marker_borderp3p4.y);
+    ImGui::Text("p4 = (%.3f, %.3f)", _marker_borderp3p4.z, _marker_borderp3p4.w);
+    ImGui::Separator();
     ImGui::Checkbox("Debug Mode", &_debug_mode);
     if(_debug_mode)
     {
         ImGui::RadioButton("Grayscale", &_debug_level, 0);
         ImGui::RadioButton("Thresholding", &_debug_level, 1);
         ImGui::RadioButton("Contour Edge", &_debug_level, 2);
-        ImGui::RadioButton("Box Detect", &_debug_level, 3);
     }
 }

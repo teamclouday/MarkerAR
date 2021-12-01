@@ -86,7 +86,7 @@ vec4 smartDeNoise_lum(ivec2 uv, float sigma, float kSigma, float threshold)
 void main()
 {
     ivec2 baseUV = ivec2(gl_GlobalInvocationID.xy);
-    baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn));
+    baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn) - ivec2(1));
     vec3 imgColor = imageLoad(imageIn, baseUV).rgb;
     
     vec4 denoised = smartDeNoise(baseUV, coeff_sigma, coeff_kSigma, coeff_threshold);

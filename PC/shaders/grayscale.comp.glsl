@@ -14,17 +14,23 @@ uniform float blurRadius;
 uniform float blurQuality;
 uniform float blurDirections;
 
-void blur(inout vec3 imgColor, ivec2 baseUV)
+void blur(inout vec3 imgColor, ivec2 baseUV, ivec2 bounds)
 {
-    for(float d = 0.0; d < PI_2; d+=PI_2/blurDirections)
+    float counts = 0.0;
+    float invQuality = 1.0 / blurQuality;
+    for(float d = 0.0; d < PI_2; d += PI_2 / blurDirections)
     {
-        for(float i = 1.0/blurQuality; i <= 1.0; i+=1.0/blurQuality)
+        for(float i = invQuality; i <= 1.0; i += invQuality)
         {
-            ivec2 uv = ivec2(vec2(cos(d),sin(d))*blurRadius*i);
-            imgColor += imageLoad(imageIn, baseUV + uv).rgb;
+            ivec2 uv = ivec2(vec2(cos(d), sin(d)) * blurRadius * i) + baseUV;
+            if(uv.x >= 0 && uv.y >= 0 && uv.x <= bounds.x && uv.y <= bounds.y)
+            {
+                imgColor += imageLoad(imageIn, uv).rgb;
+                counts += 1.0;
+            }
         }
     }
-    imgColor /= blurQuality * blurDirections + 1.0;
+    imgColor /= counts;
 }
 
 float grayscale(vec3 imgColor, int n)
@@ -43,11 +49,12 @@ float grayscale(vec3 imgColor, int n)
 void main()
 {
     ivec2 baseUV = ivec2(gl_GlobalInvocationID.xy);
-    baseUV = clamp(baseUV, ivec2(0), imageSize(imageIn));
+    ivec2 size = imageSize(imageIn) - ivec2(1);
+    baseUV = clamp(baseUV, ivec2(0), size);
     vec3 imgColor = imageLoad(imageIn, baseUV).rgb;
     if(blurFilter)
     {
-        blur(imgColor, baseUV);
+        blur(imgColor, baseUV, size);
     }
     imageStore(imageOut, baseUV, vec4(grayscale(imgColor, shades)));
 }

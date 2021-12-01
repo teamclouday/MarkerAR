@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
+#include <random>
+#include <map>
 #include "shader.hpp"
 
 struct BoxData
@@ -12,6 +14,18 @@ struct BoxData
     glm::ivec2 p2 = glm::ivec2(-1);
     glm::ivec2 p3 = glm::ivec2(-1);
     glm::ivec2 p4 = glm::ivec2(-1);
+};
+
+class RandomIntGenerator
+{
+public:
+    RandomIntGenerator(int min, int max) : rng(rd()), dist(min, max) {}
+    int next() {return dist(rng);}
+
+private:
+    std::random_device rd;
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> dist;
 };
 
 class Marker
@@ -32,7 +46,7 @@ public:
     }
     // only get current texture
     GLuint lastTex() {return _tex[!_currentTex];}
-    bool debug() {return _debug_mode && _debug_level < 3;}
+    bool debug() {return _debug_mode && _debug_level < 2;}
 
     void UI();
 
@@ -41,8 +55,7 @@ private:
     int _width, _height;
     GLuint _tex[2];
     int _currentTex = 0;
-    std::shared_ptr<Shader> _shader1, _shader2,
-        _shader3, _shader4, _shaderDraw;
+    std::shared_ptr<Shader> _shader1, _shader2, _shaderDraw;
 
     int _gray_shades = 1;
     bool _blur = false;
@@ -50,10 +63,20 @@ private:
     float _threshold = 0.5f;
     bool _auto_threshold = false;
     int _auto_threshold_level = 0;
-    int _boxesX, _boxesY;
-    std::vector<BoxData> _boxes;
-    GLuint _boxesSSBO, _boxesVAO;
+    std::vector<int8_t> _image_data;
+    int _image_scan_step;
+    glm::vec4 _marker_borderp1p2;
+    glm::vec4 _marker_borderp3p4;
+    int _tracing_max_iter = 5000;
+    int _tracing_thres_contour = 200;
+    float _tracing_thres_quadra = 4.0f;
+    GLuint _drawVAO, _drawVBO;
+    int _marker_not_found = 0;
 
     int _debug_level = 0;
     bool _debug_mode = false;
+
+    bool follow_contour(int x, int y);
+    bool fit_quadrilateral(std::vector<glm::vec2>& track);
+    void update_vbo();
 };
