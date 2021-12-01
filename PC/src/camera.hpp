@@ -13,11 +13,12 @@ public:
     Camera()
     {
         // open default camera
-        if(!_cam.open(0, cv::CAP_ANY) || !_cam.isOpened())
+        if(!_cam.open(0, cv::CAP_V4L2) || !_cam.isOpened())
             throw std::runtime_error("Failed to open camera!");
         // set properties
-        _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
+        // _cam.set(cv::CAP_PROP_BUFFERSIZE, 1);
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+        _cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
         _height = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_HEIGHT));
         _ratio = static_cast<float>(_width) / _height;

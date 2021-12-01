@@ -230,7 +230,7 @@ bool Marker::follow_contour(int x, int y)
     while (pCurr != pStart && iterCounter < _tracing_max_iter);
     if(iterCounter >= _tracing_max_iter) return false;
     // check contour border size
-    if(track.size() < _tracing_thres_contour) return false;
+    if(static_cast<int>(track.size()) < _tracing_thres_contour) return false;
     // std::cout << pStart.x << "," << pStart.y << "," << track.size() << std::endl;
     // try to fit a quadrilateral
     return fit_quadrilateral(track);
@@ -274,6 +274,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
 {
     // step 1: find farthest point as first corner p1
     // and get the centroid at the same time
+    int trackSize = static_cast<int>(track.size());
     int p1 = 0, p2 = 0, p3 = 0, p4 = 0;
     float dist1 = 0.0f, dist2 = 0.0f;
     glm::vec2 centeroid;
@@ -318,7 +319,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             }
         }
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p1);
     // step 3: given p2 and p3, find p4
@@ -338,7 +339,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             p4 = pCurr;
         }
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p3);
     // validate angle p1p2, p1p3, p4p2, p4p3
@@ -359,7 +360,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             >= _tracing_thres_quadra
         ) return false;
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p2);
 
@@ -376,7 +377,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             >= _tracing_thres_quadra
         ) return false;
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p4);
 
@@ -393,7 +394,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             >= _tracing_thres_quadra
         ) return false;
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p3);
 
@@ -410,7 +411,7 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
             >= _tracing_thres_quadra
         ) return false;
         pCurr++;
-        if(pCurr >= track.size()) pCurr = 0;
+        if(pCurr >= trackSize) pCurr = 0;
     }
     while (pCurr != p1);
     // step5: store data
