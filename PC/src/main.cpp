@@ -78,6 +78,11 @@ int main()
             cam->groupX(),
             cam->groupY()
         );
+        // estimate pose
+        marker->estimatePose(
+            cam->cameraK(),
+            cam->cameraInvK()
+        );
         // render camera frome to screen
         glUseProgram(render->program());
         glActiveTexture(GL_TEXTURE0);

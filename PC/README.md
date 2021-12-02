@@ -31,3 +31,10 @@ To compile from source:
    cmake --build . --config Release
    ```
 5. Executable can be found in `bin` folder
+
+------
+
+Most marker detection programs found on the Internet depend heavily on OpenCV framework.
+It is an awesome tool but too complex for this simple task.
+This project only uses OpenCV for cross-platform webcam image retrieving and try to implement everything from scratch.
+The program uses OpenGL 4.5+ context and runs cross-platform on both Windows and Linux.

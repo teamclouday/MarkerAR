@@ -7,6 +7,7 @@ void Camera::UI()
 {
     ImGui::Text("OpenCV Backend: %s", _backend.c_str());
     ImGui::Text("Capture Size: %dx%d", _width, _height);
+    ImGui::Separator();
     ImGui::Checkbox("Denoising", &_denoise);
     if(_denoise)
     {
@@ -14,6 +15,12 @@ void Camera::UI()
         ImGui::DragFloat("Denoise Sigma", &_sigma, 0.01f, 0.001f, 5.0f, "%.2f");
         ImGui::DragFloat("Denoise kSigma", &_kSigma, 0.01f, 0.001f, 10.0f, "%.2f");
     }
+    ImGui::Separator();
+    ImGui::Text("Camera Calibration");
+    if(ImGui::DragFloat("focal fx", &_camK[0][0], 0.01f, 0.01f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("focal fy", &_camK[1][1], 0.01f, 0.01f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("principle cx", &_camK[2][0], 0.01f, -10000.0f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("principle cy", &_camK[2][1], 0.01f, -10000.0f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
 }
 
 void Context::UI()
@@ -48,6 +55,12 @@ void Marker::UI()
     ImGui::Text("p2 = (%.3f, %.3f)", _marker_borderp1p2.z, _marker_borderp1p2.w);
     ImGui::Text("p3 = (%.3f, %.3f)", _marker_borderp3p4.x, _marker_borderp3p4.y);
     ImGui::Text("p4 = (%.3f, %.3f)", _marker_borderp3p4.z, _marker_borderp3p4.w);
+    ImGui::Separator();
+    ImGui::Text("Pose Estimation");
+    ImGui::Text("(%.2f, %.2f, %.2f,\n,%.2f, %.2f, %.2f,\n%.2f, %.2f, %.2f)",
+        _poseH[0][0], _poseH[1][0], _poseH[3][0],
+        _poseH[0][1], _poseH[1][1], _poseH[3][1],
+        _poseH[0][3], _poseH[1][3], _poseH[3][3]);
     ImGui::Separator();
     ImGui::Checkbox("Debug Mode", &_debug_mode);
     if(_debug_mode)

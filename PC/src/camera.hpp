@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <stdexcept>
 #include <memory>
 #include <cmath>
@@ -65,6 +66,13 @@ public:
         _denoise_shader = std::make_shared<Shader>();
         _denoise_shader->add("shaders/denoise.comp.glsl", GL_COMPUTE_SHADER);
         _denoise_shader->compile();
+        // set camera calibration matrix
+        _camK = glm::mat3(
+            glm::vec3(1.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f),
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+        _camInvK = glm::inverse(_camK);
     }
 
     ~Camera()
@@ -127,6 +135,8 @@ public:
     float ratio() const {return _ratio;}
     int groupX() const {return _groupX;}
     int groupY() const {return _groupY;}
+    glm::mat3 cameraK() const {return _camK;}
+    glm::mat3 cameraInvK() const {return _camInvK;}
 
     void UI();
 
@@ -141,4 +151,6 @@ private:
     bool _denoise = false;
     float _sigma = 3.0f, _kSigma = 6.0f, _threshold = 0.1f;
     std::string _backend;
+    glm::mat3 _camK;
+    glm::mat3 _camInvK;
 };

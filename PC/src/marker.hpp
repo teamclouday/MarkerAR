@@ -36,6 +36,7 @@ public:
 
     void process(GLuint sourceImg, int groupX, int groupY);
     void drawCorners(float ratioCon, float ratioCam);
+    void estimatePose(const glm::mat3& cameraK, const glm::mat3& cameraInvK);
 
     // fetch texture and update index
     GLuint fetchTex()
@@ -72,11 +73,15 @@ private:
     float _tracing_thres_quadra = 4.0f;
     GLuint _drawVAO, _drawVBO;
     int _marker_not_found = 0;
+    glm::mat3 _poseH;
+    glm::mat4x3 _poseM;
+    glm::mat3 _poseK = glm::mat3(1.0f); // not used yet
+    // glm::mat4 _poseH;
 
     int _debug_level = 0;
     bool _debug_mode = false;
 
     bool follow_contour(int x, int y);
     bool fit_quadrilateral(std::vector<glm::vec2>& track);
-    void update_vbo();
+    void update_corners();
 };

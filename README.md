@@ -43,6 +43,7 @@ With marker corners, we can estimate the pose from homography.
 
 2. Prepare 3x3 matrix `H` where:
    ```
+   p = Hq
    cross(p, Hq) = 0
    ```
 
@@ -53,7 +54,7 @@ With marker corners, we can estimate the pose from homography.
    where `A` is 2N*9 matrix and `h` is vector of size 9 from `H`  
    N is 4 in our case  
 
-4. Run SVD on the equation:
+4. Run SVD on `A` and retrieve:
    ```
    A = U D V^T
    ```

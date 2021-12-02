@@ -115,14 +115,14 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
     // step4: update VBO
     if(markerFound) 
     {
-        update_vbo();
+        update_corners();
         _marker_not_found = 0;
     }
     else if(_marker_borderp1p2.x > 0.0f && _marker_not_found > 20)
     {
         _marker_borderp1p2 = glm::vec4(0.0f);
         _marker_borderp3p4 = glm::vec4(0.0f);
-        update_vbo();
+        update_corners();
     }
     else if(_marker_not_found < 30)
     {
@@ -457,10 +457,20 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
     _marker_borderp3p4.y = track[p3].y / _height;
     _marker_borderp3p4.z = track[p4].x / _width;
     _marker_borderp3p4.w = track[p4].y / _height;
+
+    // _marker_borderp1p2.x = track[p1].x;
+    // _marker_borderp1p2.y = track[p1].y;
+    // _marker_borderp1p2.z = track[p2].x;
+    // _marker_borderp1p2.w = track[p2].y;
+
+    // _marker_borderp3p4.x = track[p3].x;
+    // _marker_borderp3p4.y = track[p3].y;
+    // _marker_borderp3p4.z = track[p4].x;
+    // _marker_borderp3p4.w = track[p4].y;
     return true;
 }
 
-void Marker::update_vbo()
+void Marker::update_corners()
 {
     glBindBuffer(GL_ARRAY_BUFFER, _drawVBO);
     float* ptr = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);

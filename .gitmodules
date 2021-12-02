@@ -10,3 +10,6 @@
 [submodule "PC/external/imgui"]
 	path = PC/external/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "PC/external/eigen"]
+	path = PC/external/eigen
+	url = https://gitlab.com/teamclouday/eigen.git
