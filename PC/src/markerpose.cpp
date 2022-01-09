@@ -2,11 +2,30 @@
 #include <Eigen/SVD>
 #include <Eigen/Dense>
 #include <glm/gtc/matrix_transform.hpp>
+#include <opencv2/opencv.hpp>
 #include <cmath>
-#include <vector>
 #include <limits>
 #include <iostream>
 
+// compute reprojection error
+float reprojectionError(
+    const glm::mat3& cameraK, const glm::mat4x3& M,
+    const std::vector<glm::vec2>& objPoints,
+    const std::vector<glm::vec2>& imgPoints
+)
+{
+    float error = 0.0f;
+    for(size_t i = 0; i < 4; i++)
+    {
+        auto projected = cameraK * M * glm::vec4(objPoints[i], 1.0f, 1.0f);
+        float dx = projected.x - imgPoints[i].x;
+        float dy = projected.y - imgPoints[i].y;
+        error += dx * dx + dy * dy;
+    }
+    return std::sqrt(error * 0.125f);
+}
+
+// validate solution based on Zhang's method
 bool validateSolutionZhang(
     const Eigen::Vector3f& tstar, const Eigen::Vector3f& nstar, const Eigen::MatrixXf& H,
     const Eigen::MatrixXf& mstarT, Eigen::Matrix3f& outR, Eigen::Vector3f& outT
@@ -35,6 +54,7 @@ bool validateSolutionZhang(
 
 // refer to https://hal.inria.fr/inria-00174036v3/document
 // refer to https://github.com/opencv/opencv/blob/4.x/modules/calib3d/src/homography_decomp.cpp#L217
+// decompose homography matrix
 void decomposeHomoMatrixZhang(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK, const glm::mat3x4& mstarTransposed,
     const glm::mat3& G, const std::vector<glm::vec2>& objPoints,
@@ -49,9 +69,9 @@ void decomposeHomoMatrixZhang(
          hHat[0][1], hHat[1][1], hHat[2][1],
          hHat[0][2], hHat[1][2], hHat[2][2];
     Eigen::EigenSolver<Eigen::MatrixXf> eigenSolver;
-    // eigenSolver.compute(H, false);
-    // float gamma = eigenSolver.eigenvalues().real()[1];
-    // H = H / gamma; // scale by lambda2
+    eigenSolver.compute(H, false);
+    float gamma = eigenSolver.eigenvalues().real()[1];
+    H = H / gamma; // scale by lambda2
     // H^TH = V A V^T and solve for eigenvalues and eigenvectors
     // H = H.transpose() * H;
     eigenSolver.compute(H, true);
@@ -111,7 +131,7 @@ void decomposeHomoMatrixZhang(
         {
             if(validateSolutionZhang(tstar[i], nstar[j], H, mstarT, R, T))
             {
-                candidates.push_back(cameraK * glm::mat4x3(
+                candidates.push_back(glm::mat4x3(
                     glm::vec3(R.col(0)[0], R.col(0)[1], R.col(0)[2]),
                     glm::vec3(R.col(1)[0], R.col(1)[1], R.col(1)[2]),
                     glm::vec3(R.col(2)[0], R.col(2)[1], R.col(2)[2]),
@@ -120,7 +140,7 @@ void decomposeHomoMatrixZhang(
             }
             if(validateSolutionZhang(tstar[i+2], nstar[j+2], H, mstarT, R, T))
             {
-                candidates.push_back(cameraK * glm::mat4x3(
+                candidates.push_back(glm::mat4x3(
                     glm::vec3(R.col(0)[0], R.col(0)[1], R.col(0)[2]),
                     glm::vec3(R.col(1)[0], R.col(1)[1], R.col(1)[2]),
                     glm::vec3(R.col(2)[0], R.col(2)[1], R.col(2)[2]),
@@ -136,31 +156,24 @@ void decomposeHomoMatrixZhang(
         return;
     }
     // compute reprojection error for each
-    
     float minError = std::numeric_limits<float>::max();
     size_t selectedIdx = 0;
     for(size_t i = 0; i < candidates.size(); i++)
     {
-        float error = 0.0f;
-        auto& mat = candidates[i];
-        for(size_t j = 0; j < 4; j++)
-        {
-            auto projected = mat * glm::vec4(objPoints[j], 1.0f, 1.0f);
-            float dx = projected.x - imgPoints[j].x;
-            float dy = projected.y - imgPoints[j].y;
-            error += dx * dx + dy * dy;
-        }
+        float error = reprojectionError(cameraK, candidates[i], objPoints, imgPoints);
         if(error < minError)
         {
             minError = error;
             selectedIdx = i;
         }
     }
+    // std::cout << "Reprojection Error: " << minError << std::endl;
     // set pose matrix
     outputM = candidates[selectedIdx];
 }
 
 // refer to: https://github.com/opencv/opencv/blob/master/modules/calib3d/src/undistort.dispatch.cpp#L384
+// undistort image points
 void undistortPoints(
     const glm::mat3& cameraK, const glm::vec3& cameraDistK, const glm::vec2& cameraDistP,
     glm::vec2& p1, glm::vec2& p2, glm::vec2& p3, glm::vec2& p4)
@@ -237,6 +250,7 @@ void undistortPoints(
 }
 
 // refer to book: "Augmented Reality: Principles and Practice"
+// decompose homography matrix
 void decomposeHomoMatrixARBook(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK, glm::mat3 H, glm::mat4x3& outputM
 )
@@ -246,8 +260,8 @@ void decomposeHomoMatrixARBook(
     float d = 1.0f / std::sqrt(glm::length(H[0]) * glm::length(H[1]));
     // set translation
     outputM[3] = d * H[2];
-    glm::vec3 h1 = d * H[0];
-    glm::vec3 h2 = d * H[1];
+    glm::vec3 h1 = H[0];
+    glm::vec3 h2 = H[1];
     glm::vec3 h12 = glm::normalize(h1 + h2);
     glm::vec3 h21 = glm::normalize(glm::cross(h12, glm::cross(h1, h2)));
     // set rotations
@@ -255,10 +269,10 @@ void decomposeHomoMatrixARBook(
     outputM[0] = (h12 + h21) * d; // set R1
     outputM[1] = (h12 - h21) * d; // set R2
     outputM[2] = glm::cross(outputM[0], outputM[1]); // set R3
-    // outputM = cameraK * outputM;
 }
 
 // refer to https://stackoverflow.com/questions/8927771/computing-camera-pose-with-homography-matrix-based-on-4-coplanar-points
+// decompose homography matrix
 void decomposeHomoMatrixInternet(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK, glm::mat3 H, glm::mat4x3& outputM
 )
@@ -271,10 +285,10 @@ void decomposeHomoMatrixInternet(
     outputM[0] = glm::normalize(H[0]);
     outputM[1] = glm::normalize(H[1]);
     outputM[2] = glm::cross(outputM[0], outputM[1]);
-    outputM = cameraK * outputM;
 }
 
 // refer to https://courses.cs.duke.edu//spring22/compsci527/notes/n_10_reconstruction.pdf
+// decompose homography matrix
 void decomposeHomoMatrixDuke(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK,
     const std::vector<glm::vec2>& objPoints, const std::vector<glm::vec2>& imgPoints,
@@ -334,15 +348,7 @@ void decomposeHomoMatrixDuke(
     size_t selectedIdx = 0;
     for(size_t i = 0; i < candidates.size(); i++)
     {
-        float error = 0.0f;
-        auto& mat = candidates[i];
-        for(size_t j = 0; j < 4; j++)
-        {
-            auto projected = mat * glm::vec4(objPoints[j], 1.0f, 1.0f);
-            float dx = projected.x - imgPoints[j].x;
-            float dy = projected.y - imgPoints[j].y;
-            error += dx * dx + dy * dy;
-        }
+        float error = reprojectionError(cameraK, candidates[i], objPoints, imgPoints);
         if(error < minError)
         {
             minError = error;
@@ -354,6 +360,7 @@ void decomposeHomoMatrixDuke(
 }
 
 // refer to https://stanford.edu/class/ee267/notes/ee267_notes_tracking.pdf
+// decompose homography matrix
 void decomposeHomoMatrixStanford(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK, glm::mat3 H, glm::mat4x3& outputM
 )
@@ -362,30 +369,30 @@ void decomposeHomoMatrixStanford(
     float normCol0 = glm::length(H[0]);
     float normCol1 = glm::length(H[1]);
     float s = 2.0f / (normCol0 + normCol1);
-    const glm::vec3 mult = glm::vec3(1.0f, 1.0f, -1.0f);
     // set translation
-    outputM[3] = s * mult * H[2];
+    outputM[3] = s * H[2];
     // set rotations
-    outputM[0] = mult * H[0] / normCol0;
-    outputM[1] = mult * H[1] - outputM[0] * glm::dot(outputM[0], mult * H[1]);
+    outputM[0] = H[0] / normCol0;
+    outputM[1] = H[1] - outputM[0] * glm::dot(outputM[0], H[1]);
     outputM[1] = glm::normalize(outputM[1]);
     outputM[2] = glm::cross(outputM[0], outputM[1]);
-    // outputM = cameraK * outputM;
 }
 
-void testPoseM(const glm::mat4x3& M)
+// scale the estimated projection matrix
+void scalePoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q, const glm::vec2& p)
 {
-    auto tmp = M * glm::vec4(-1.0f, -1.0f, 1.0f, 1.0f);
-    std::cout << tmp.x << "," << tmp.y << "," << tmp.z << std::endl;
+    auto tmp = cameraK * M * glm::vec4(q, 1.0f, 1.0f);
+    float scale = (p.x / tmp.x + p.y / tmp.y) * 0.5f;
+    M *= scale;
 }
 
-// estimate pose from homography
+// estimate pose from homography (SVD method)
 void Marker::estimatePose(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK,
     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 )
 {
-    if(_marker_borderp1p2.x <= -1.0f)
+    if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);
         return;
@@ -393,26 +400,26 @@ void Marker::estimatePose(
     // prepare p
     glm::vec2 p1 = glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y);
     glm::vec2 p2 = glm::vec2(_marker_borderp1p2.z, _marker_borderp1p2.w);
-    glm::vec2 p3 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
-    glm::vec2 p4 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
+    glm::vec2 p4 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
+    glm::vec2 p3 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
     // undistort points
     // undistortPoints(
     //     cameraK, cameraDistK, cameraDistP,
     //     p1, p2, p3, p4
     // );
-    glm::mat3x4 mstarT = glm::transpose(
-        cameraInvK * glm::mat4x3(
-            glm::vec3(p1, 1.0f),
-            glm::vec3(p2, 1.0f),
-            glm::vec3(p3, 1.0f),
-            glm::vec3(p4, 1.0f)
-        )
-    );
+    // glm::mat3x4 mstarT = glm::transpose(
+    //     cameraInvK * glm::mat4x3(
+    //         glm::vec3(p1, 1.0f),
+    //         glm::vec3(p2, 1.0f),
+    //         glm::vec3(p3, 1.0f),
+    //         glm::vec3(p4, 1.0f)
+    //     )
+    // );
     // prepare q
     const glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
     const glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
-    const glm::vec2 q3 = glm::vec2( 1.0f, -1.0f);
-    const glm::vec2 q4 = glm::vec2( 1.0f,  1.0f);
+    const glm::vec2 q4 = glm::vec2( 1.0f, -1.0f);
+    const glm::vec2 q3 = glm::vec2( 1.0f,  1.0f);
     // set up matrix A
     Eigen::Matrix<float, 8, 9> A;
     A << q1.x, q1.y, 1.0f, 0.0f, 0.0f, 0.0f, -p1.x*q1.x, -p1.x*q1.y, -p1.x,
@@ -438,17 +445,20 @@ void Marker::estimatePose(
 
     std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
-    decomposeHomoMatrixZhang(cameraK, cameraInvK, mstarT, H, objPoints, imgPoints, _poseM);
-    testPoseM(_poseM);
+    // decomposeHomoMatrixZhang(cameraK, cameraInvK, mstarT, H, objPoints, imgPoints, _poseM);
+    decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+    scalePoseM(cameraK, _poseM, q1, p1);
+    std::cout << "Err " << reprojectionError(cameraK, _poseM, objPoints, imgPoints) << std::endl;
 }
 
 // reference: https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
+// estimate pose from homography (linear equation method)
 // void Marker::estimatePose(
 //     const glm::mat3& cameraK, const glm::mat3& cameraInvK,
 //     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 // )
 // {
-//     if(_marker_borderp1p2.x <= -1.0f)
+//     if(_marker_borderp1p2.x <= 0.0f)
 //     {
 //         _poseM = glm::mat4x3(0.0f);
 //         return;
@@ -485,7 +495,65 @@ void Marker::estimatePose(
 //         glm::vec3(h[1], h[4], h[7]),
 //         glm::vec3(h[2], h[5], 1.0f)
 //     );
-    
-//     decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
-//     testPoseM(_poseM);
+
+//     std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
+//     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
+//     // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
+//     decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+//     // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
+//     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
+//     scalePoseM(_poseM, q1, p1);
+//     std::cout << "Err " << reprojectionError(_poseM, objPoints, imgPoints) << std::endl;
 // }
+
+// use opencv as reference
+// estimate pose (OpenCV method)
+void Marker::estimatePoseOpenCV(
+    const glm::mat3& cameraK, const glm::mat3& cameraInvK,
+    const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
+)
+{
+    if(_marker_borderp1p2.x <= 0.0f)
+    {
+        _poseM = glm::mat4x3(0.0f);
+        return;
+    }
+    std::vector<cv::Point2d> imgPoints = {
+        cv::Point2d(_marker_borderp1p2.x, _marker_borderp1p2.y),
+        cv::Point2d(_marker_borderp1p2.z, _marker_borderp1p2.w),
+        cv::Point2d(_marker_borderp3p4.x, _marker_borderp3p4.y),
+        cv::Point2d(_marker_borderp3p4.z, _marker_borderp3p4.w),
+    };
+    std::vector<cv::Point3d> objPoints = {
+        cv::Point3d(-1.0, -1.0, 0.0),
+        cv::Point3d(-1.0,  1.0, 0.0),
+        cv::Point3d( 1.0, -1.0, 0.0),
+        cv::Point3d( 1.0,  1.0, 0.0),
+    };
+    // std::vector<cv::Point3d> objPoints = {
+    cv::Mat3d cameraMat = (
+        cv::Mat_<double>(3,3) << cameraK[0][0], cameraK[1][0], cameraK[2][0],
+            cameraK[0][1], cameraK[1][1], cameraK[2][1],
+            cameraK[0][2], cameraK[1][2], cameraK[2][2]
+    );
+    std::vector<double> cameraDist = {
+        cameraDistK.x, cameraDistK.y, cameraDistP.x, cameraDistP.y, cameraDistK.z
+    };
+    cv::Mat rvec, tvec;
+    if(!cv::solvePnP(objPoints, imgPoints, cameraMat, cameraDist, rvec, tvec, false, cv::SOLVEPNP_IPPE))
+    {
+        _poseM = glm::mat4x3(0.0f);
+        return;
+    }
+    cv::Mat rotMat;
+    cv::Rodrigues(rvec, rotMat);
+    rotMat.convertTo(rotMat, CV_32F);
+    tvec.convertTo(tvec, CV_32F);
+    _poseM = glm::mat4x3(
+        glm::vec3(rotMat.at<float>(0,0), rotMat.at<float>(1,0), rotMat.at<float>(2,0)),
+        glm::vec3(rotMat.at<float>(0,1), rotMat.at<float>(1,1), rotMat.at<float>(2,1)),
+        glm::vec3(rotMat.at<float>(0,2), rotMat.at<float>(1,2), rotMat.at<float>(2,2)),
+        glm::vec3(tvec.at<float>(0,0), tvec.at<float>(0,1), tvec.at<float>(0,2))
+    );
+    scalePoseM(cameraK, _poseM, glm::vec2(-1.0f, -1.0f), glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y));
+}

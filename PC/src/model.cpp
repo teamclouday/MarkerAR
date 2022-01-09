@@ -1,8 +1,10 @@
 #include "model.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
-ModelCube::ModelCube()
+ModelCube::ModelCube(int camWidth, int camHeight)
 {
+    _width = camWidth;
+    _height = camHeight;
     // data from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-4-a-colored-cube/
     const float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
@@ -109,7 +111,10 @@ ModelCube::~ModelCube()
     glDeleteVertexArrays(1, &_vao);
 }
 
-void ModelCube::render(const glm::mat4x3& poseM, float cameraRatio, float windowRatio)
+void ModelCube::render(
+    const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    float cameraRatio, float windowRatio
+)
 {
     glEnable(GL_DEPTH_TEST);
     if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -118,8 +123,11 @@ void ModelCube::render(const glm::mat4x3& poseM, float cameraRatio, float window
     // const glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
     _shader->uniformMat4x3("poseM", poseM);
     _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat3x3("cameraK", cameraK);
     _shader->uniformFloat("ratio_img", cameraRatio);
     _shader->uniformFloat("ratio_win", windowRatio);
+    _shader->uniformFloat("cam_width", _width);
+    _shader->uniformFloat("cam_height", _height);
     glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, _vertex_count);
     glBindVertexArray(0);

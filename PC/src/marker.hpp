@@ -1,11 +1,9 @@
 #pragma once
-
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 #include <random>
-#include <map>
 #include "shader.hpp"
 
 struct BoxData
@@ -40,6 +38,10 @@ public:
         const glm::mat3& cameraK, const glm::mat3& cameraInvK,
         const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
     );
+    void estimatePoseOpenCV(
+        const glm::mat3& cameraK, const glm::mat3& cameraInvK,
+        const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
+    );
 
     // fetch texture and update index
     GLuint fetchTex()
@@ -55,19 +57,20 @@ public:
 
     void UI();
 
-
 private:
     int _width, _height;
     GLuint _tex[2];
     int _currentTex = 0;
     std::shared_ptr<Shader> _shader1, _shader2, _shaderDraw;
 
+    // variables for preprocessing image
     int _gray_shades = 1;
     bool _blur = false;
     float _blur_radius = 5.0f, _blur_quality = 6.0f, _blur_directions = 12.0f;
     float _threshold = 0.5f;
     bool _auto_threshold = false;
     int _auto_threshold_level = 0;
+    // variables for closed contour detection
     std::vector<int8_t> _image_data;
     int _image_scan_step;
     glm::vec4 _marker_borderp1p2;
@@ -75,8 +78,10 @@ private:
     int _tracing_max_iter = 5000;
     int _tracing_thres_contour = 200;
     float _tracing_thres_quadra = 4.0f;
+    // variables for marker render
     GLuint _drawVAO, _drawVBO;
     int _marker_not_found = 0;
+    // variable for pose estimation
     glm::mat4x3 _poseM;
 
     int _debug_level = 0;
@@ -85,4 +90,10 @@ private:
     bool follow_contour(int x, int y);
     bool fit_quadrilateral(std::vector<glm::vec2>& track);
     void update_corners();
+    void refinePoseM(
+        const glm::mat3& cameraK,
+        const glm::mat4x3& prevM, const glm::mat4x3& currM,
+        const std::vector<glm::vec2>& objPoints,
+        const std::vector<glm::vec2>& imgPoints
+    );
 };

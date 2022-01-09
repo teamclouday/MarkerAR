@@ -118,10 +118,10 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
         update_corners();
         _marker_not_found = 0;
     }
-    else if(_marker_borderp1p2.x >= -1.0f && _marker_not_found > 20)
+    else if(_marker_borderp1p2.x >= 0.0f && _marker_not_found > 20)
     {
-        _marker_borderp1p2 = glm::vec4(-1.0f);
-        _marker_borderp3p4 = glm::vec4(-1.0f);
+        _marker_borderp1p2 = glm::vec4(0.0f);
+        _marker_borderp3p4 = glm::vec4(0.0f);
         update_corners();
     }
     else if(_marker_not_found < 30)
@@ -231,7 +231,6 @@ bool Marker::follow_contour(int x, int y)
     if(iterCounter >= _tracing_max_iter) return false;
     // check contour border size
     if(static_cast<int>(track.size()) < _tracing_thres_contour) return false;
-    // std::cout << pStart.x << "," << pStart.y << "," << track.size() << std::endl;
     // try to fit a quadrilateral
     return fit_quadrilateral(track);
 }
@@ -448,25 +447,25 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
         p2 = tmp;
     }
     // step 6: update and store data
-    _marker_borderp1p2.x = track[p1].x / _width * 2.0f - 1.0f;
-    _marker_borderp1p2.y = track[p1].y / _height * 2.0f - 1.0f;
-    _marker_borderp1p2.z = track[p2].x / _width * 2.0f - 1.0f;
-    _marker_borderp1p2.w = track[p2].y / _height * 2.0f - 1.0f;
+    // _marker_borderp1p2.x = (track[p1].x / _width) * 2.0 - 1.0;
+    // _marker_borderp1p2.y = (track[p1].y / _height) * 2.0 - 1.0;
+    // _marker_borderp1p2.z = (track[p2].x / _width) * 2.0 - 1.0;
+    // _marker_borderp1p2.w = (track[p2].y / _height) * 2.0 - 1.0;
 
-    _marker_borderp3p4.x = track[p3].x / _width * 2.0f - 1.0f;
-    _marker_borderp3p4.y = track[p3].y / _height * 2.0f - 1.0f;
-    _marker_borderp3p4.z = track[p4].x / _width * 2.0f - 1.0f;
-    _marker_borderp3p4.w = track[p4].y / _height * 2.0f - 1.0f;
+    // _marker_borderp3p4.x = (track[p3].x / _width) * 2.0 - 1.0;
+    // _marker_borderp3p4.y = (track[p3].y / _height) * 2.0 - 1.0;
+    // _marker_borderp3p4.z = (track[p4].x / _width) * 2.0 - 1.0;
+    // _marker_borderp3p4.w = (track[p4].y / _height) * 2.0 - 1.0;
 
-    // _marker_borderp1p2.x = track[p1].x;
-    // _marker_borderp1p2.y = track[p1].y;
-    // _marker_borderp1p2.z = track[p2].x;
-    // _marker_borderp1p2.w = track[p2].y;
+    _marker_borderp1p2.x = track[p1].x;
+    _marker_borderp1p2.y = track[p1].y;
+    _marker_borderp1p2.z = track[p2].x;
+    _marker_borderp1p2.w = track[p2].y;
 
-    // _marker_borderp3p4.x = track[p3].x;
-    // _marker_borderp3p4.y = track[p3].y;
-    // _marker_borderp3p4.z = track[p4].x;
-    // _marker_borderp3p4.w = track[p4].y;
+    _marker_borderp3p4.x = track[p3].x;
+    _marker_borderp3p4.y = track[p3].y;
+    _marker_borderp3p4.z = track[p4].x;
+    _marker_borderp3p4.w = track[p4].y;
     return true;
 }
 
@@ -493,6 +492,8 @@ void Marker::drawCorners(float ratioCon, float ratioCam)
         glUseProgram(_shaderDraw->program());
         _shaderDraw->uniformFloat("ratio_img", ratioCam);
         _shaderDraw->uniformFloat("ratio_win", ratioCon);
+        _shaderDraw->uniformFloat("cam_width", _width);
+        _shaderDraw->uniformFloat("cam_height", _height);
         glBindVertexArray(_drawVAO);
         glBindBuffer(GL_ARRAY_BUFFER, _drawVBO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

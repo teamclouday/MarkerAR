@@ -29,11 +29,14 @@ int main()
             cam->width(),
             cam->height()
         );
+        model = std::make_shared<ModelCube>(
+            cam->width(),
+            cam->height()
+        );
         render = std::make_shared<Shader>();
         render->add("shaders/render.vert.glsl", GL_VERTEX_SHADER);
         render->add("shaders/render.frag.glsl", GL_FRAGMENT_SHADER);
         render->compile();
-        model = std::make_shared<ModelCube>();
     }
     catch(const std::exception& e)
     {
@@ -106,7 +109,10 @@ int main()
         glUseProgram(0);
         marker->drawCorners(con->ratio(), cam->ratio());
         // use estimated pose to render a model
-        model->render(marker->poseM(), cam->ratio(), con->ratio());
+        model->render(
+            cam->cameraK(), marker->poseM(),
+            cam->ratio(), con->ratio()
+        );
         con->endFrame(renderUI);
     }
 

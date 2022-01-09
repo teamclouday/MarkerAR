@@ -72,6 +72,7 @@ while True:
 
             # Find the rotation and translation vectors.
             _, rvecs, tvecs = cv2.solvePnP(objp, corners, mtx, dist, flags=cv2.SOLVEPNP_ITERATIVE)
+            # print(rvecs, tvecs)
 
             # project 3D points to image plane
             imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
