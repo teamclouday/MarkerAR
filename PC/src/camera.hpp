@@ -67,12 +67,23 @@ public:
         _denoise_shader->add("shaders/denoise.comp.glsl", GL_COMPUTE_SHADER);
         _denoise_shader->compile();
         // set camera calibration matrix
+        // TODO: support loading camera data from a local file (json)
         _camK = glm::mat3(
-            glm::vec3(1.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f),
-            glm::vec3(0.0f, 0.0f, 1.0f)
+            glm::vec3(776.39107688f, 0.0f,          0.0f),
+            glm::vec3(0.0f,          770.19292802f, 0.0f),
+            glm::vec3(346.33206594f, 315.46822203f, 1.0f)
         );
+        // TODO: make this a parameter
+        const float cameraCalibWidth = 800.0f, cameraCalibHeight = 600.0f;
+        _camK[0][0] *= _width / cameraCalibWidth;
+        _camK[2][0] *= _width / cameraCalibWidth;
+        _camK[1][1] *= _height / cameraCalibHeight;
+        _camK[2][1] *= _height / cameraCalibHeight;
         _camInvK = glm::inverse(_camK);
+        // set camera distortion data (k1, k2, p1, p2, k3)
+        // https://docs.opencv.org/3.4/d4/d94/tutorial_camera_calibration.html
+        _camDistCoeffK = glm::vec3(-3.58177671e-1,  5.58704262e-1, -8.93211088e-1);
+        _camDistCoeffP = glm::vec2(8.46171348e-4, -4.12405134e-3);
     }
 
     ~Camera()
@@ -137,6 +148,8 @@ public:
     int groupY() const {return _groupY;}
     glm::mat3 cameraK() const {return _camK;}
     glm::mat3 cameraInvK() const {return _camInvK;}
+    glm::vec3 cameraDistK() const {return _camDistCoeffK;}
+    glm::vec2 cameraDistP() const {return _camDistCoeffP;}
 
     void UI();
 
@@ -153,4 +166,6 @@ private:
     std::string _backend;
     glm::mat3 _camK;
     glm::mat3 _camInvK;
+    glm::vec3 _camDistCoeffK;
+    glm::vec2 _camDistCoeffP;
 };

@@ -18,6 +18,8 @@ int main()
     std::shared_ptr<Marker> marker;
     std::shared_ptr<Shader> render;
 
+    std::shared_ptr<Model> model;
+
     // initialze all
     try
     {
@@ -31,6 +33,7 @@ int main()
         render->add("shaders/render.vert.glsl", GL_VERTEX_SHADER);
         render->add("shaders/render.frag.glsl", GL_FRAGMENT_SHADER);
         render->compile();
+        model = std::make_shared<ModelCube>();
     }
     catch(const std::exception& e)
     {
@@ -61,6 +64,11 @@ int main()
                 marker->UI();
                 ImGui::EndTabItem();
             }
+            if(ImGui::BeginTabItem("Model"))
+            {
+                model->UI();
+                ImGui::EndTabItem();
+            }
             ImGui::EndTabBar();
         }
         ImGui::End();
@@ -81,7 +89,9 @@ int main()
         // estimate pose
         marker->estimatePose(
             cam->cameraK(),
-            cam->cameraInvK()
+            cam->cameraInvK(),
+            cam->cameraDistK(),
+            cam->cameraDistP()
         );
         // render camera frome to screen
         glUseProgram(render->program());
@@ -95,6 +105,8 @@ int main()
         cam->draw();
         glUseProgram(0);
         marker->drawCorners(con->ratio(), cam->ratio());
+        // use estimated pose to render a model
+        model->render(marker->poseM(), cam->ratio(), con->ratio());
         con->endFrame(renderUI);
     }
 

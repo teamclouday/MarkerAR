@@ -1,6 +1,8 @@
 #pragma once
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -94,6 +96,24 @@ public:
     {
         if(!compiled) return;
         glUniform1f(glGetUniformLocation(_program, name), val);
+    }
+
+    void uniformMat3x3(const char* name, const glm::mat3& matrix) const
+    {
+        if(!compiled) return;
+        glUniformMatrix3fv(glGetUniformLocation(_program, name), 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void uniformMat4x3(const char* name, const glm::mat4x3& matrix) const
+    {
+        if(!compiled) return;
+        glUniformMatrix4x3fv(glGetUniformLocation(_program, name), 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void uniformMat4x4(const char* name, const glm::mat4& matrix) const
+    {
+        if(!compiled) return;
+        glUniformMatrix4fv(glGetUniformLocation(_program, name), 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
     GLuint program() {return _program;}

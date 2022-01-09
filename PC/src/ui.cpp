@@ -1,6 +1,7 @@
 #include "camera.hpp"
 #include "context.hpp"
 #include "marker.hpp"
+#include "model.hpp"
 #include <imgui.h>
 
 void Camera::UI()
@@ -17,10 +18,10 @@ void Camera::UI()
     }
     ImGui::Separator();
     ImGui::Text("Camera Calibration");
-    if(ImGui::DragFloat("focal fx", &_camK[0][0], 0.01f, 0.01f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
-    if(ImGui::DragFloat("focal fy", &_camK[1][1], 0.01f, 0.01f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
-    if(ImGui::DragFloat("principle cx", &_camK[2][0], 0.01f, -10000.0f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
-    if(ImGui::DragFloat("principle cy", &_camK[2][1], 0.01f, -10000.0f, 10000.0f, "%.2f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("focal fx", &_camK[0][0], 0.01f, 0.01f, 10000.0f, "%.6f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("focal fy", &_camK[1][1], 0.01f, 0.01f, 10000.0f, "%.6f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("principle cx", &_camK[2][0], 0.01f, -10000.0f, 10000.0f, "%.6f")) _camInvK = glm::inverse(_camK);
+    if(ImGui::DragFloat("principle cy", &_camK[2][1], 0.01f, -10000.0f, 10000.0f, "%.6f")) _camInvK = glm::inverse(_camK);
 }
 
 void Context::UI()
@@ -57,10 +58,10 @@ void Marker::UI()
     ImGui::Text("p4 = (%.3f, %.3f)", _marker_borderp3p4.z, _marker_borderp3p4.w);
     ImGui::Separator();
     ImGui::Text("Pose Estimation");
-    ImGui::Text("(%.2f, %.2f, %.2f,\n,%.2f, %.2f, %.2f,\n%.2f, %.2f, %.2f)",
-        _poseH[0][0], _poseH[1][0], _poseH[3][0],
-        _poseH[0][1], _poseH[1][1], _poseH[3][1],
-        _poseH[0][3], _poseH[1][3], _poseH[3][3]);
+    ImGui::Text("%.2f, %.2f, %.2f, %.2f\n,%.2f, %.2f, %.2f, %.2f\n%.2f, %.2f, %.2f, %.2f",
+        _poseM[0][0], _poseM[1][0], _poseM[2][0], _poseM[3][0],
+        _poseM[0][1], _poseM[1][1], _poseM[2][1], _poseM[3][1],
+        _poseM[0][2], _poseM[1][2], _poseM[2][2], _poseM[3][2]);
     ImGui::Separator();
     ImGui::Checkbox("Debug Mode", &_debug_mode);
     if(_debug_mode)
@@ -69,4 +70,9 @@ void Marker::UI()
         ImGui::RadioButton("Thresholding", &_debug_level, 1);
         ImGui::RadioButton("Contour Edge", &_debug_level, 2);
     }
+}
+
+void ModelCube::UI()
+{
+    
 }

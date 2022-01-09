@@ -36,7 +36,10 @@ public:
 
     void process(GLuint sourceImg, int groupX, int groupY);
     void drawCorners(float ratioCon, float ratioCam);
-    void estimatePose(const glm::mat3& cameraK, const glm::mat3& cameraInvK);
+    void estimatePose(
+        const glm::mat3& cameraK, const glm::mat3& cameraInvK,
+        const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
+    );
 
     // fetch texture and update index
     GLuint fetchTex()
@@ -48,6 +51,7 @@ public:
     // only get current texture
     GLuint lastTex() {return _tex[!_currentTex];}
     bool debug() {return _debug_mode && _debug_level < 2;}
+    glm::mat4x3 poseM() {return _poseM;}
 
     void UI();
 
@@ -73,10 +77,7 @@ private:
     float _tracing_thres_quadra = 4.0f;
     GLuint _drawVAO, _drawVBO;
     int _marker_not_found = 0;
-    glm::mat3 _poseH;
     glm::mat4x3 _poseM;
-    glm::mat3 _poseK = glm::mat3(1.0f); // not used yet
-    // glm::mat4 _poseH;
 
     int _debug_level = 0;
     bool _debug_mode = false;

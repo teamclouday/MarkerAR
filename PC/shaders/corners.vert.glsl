@@ -7,7 +7,7 @@ uniform float ratio_win;
 
 void main()
 {
-    vec2 pos = inPos * 2.0 - 1.0;
+    vec2 pos = inPos;
     if(ratio_img > ratio_win)
     {
         pos.y = pos.y * ratio_win / ratio_img;

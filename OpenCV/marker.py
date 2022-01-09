@@ -39,7 +39,7 @@ while True:
     _, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thres = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)[1]
+    thres = cv2.threshold(gray, 60, 255, cv2.THRESH_OTSU)[1]
     contours, _ = cv2.findContours(thres, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for i,cnt in enumerate(contours):
         # detect my custom square contour
@@ -71,7 +71,7 @@ while True:
             corners = corners[[p4, p3, p2, p1]].astype(np.float32)
 
             # Find the rotation and translation vectors.
-            _, rvecs, tvecs = cv2.solvePnP(objp, corners, mtx, dist)
+            _, rvecs, tvecs = cv2.solvePnP(objp, corners, mtx, dist, flags=cv2.SOLVEPNP_ITERATIVE)
 
             # project 3D points to image plane
             imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
