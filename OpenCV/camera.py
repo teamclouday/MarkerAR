@@ -45,8 +45,22 @@ for fname in images:
 
 # Now calibrate camera
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-with open("camera.pkl", "wb") as outFile:
-    pickle.dump([mtx, dist, rvecs, tvecs], outFile)
+with open("camera.txt", "w") as outFile:
+    # store original image size
+    print("{},{}".format(gray.shape[0], gray.shape[1]), file=outFile)
+    # store camera matrix
+    print("{},{},{}".format(mtx[0][0], mtx[0][1], mtx[0][2]), file=outFile)
+    print("{},{},{}".format(mtx[1][0], mtx[1][1], mtx[1][2]), file=outFile)
+    print("{},{},{}".format(mtx[2][0], mtx[2][1], mtx[2][2]), file=outFile)
+    # store distortion data
+    distStr = ""
+    if len(dist) > 0:
+        dist = dist[0]
+    for val in dist:
+        distStr += str(val)+","
+    if len(distStr) > 0:
+        distStr = distStr[:-1]
+        print(distStr, file=outFile)
 print("Camera calibrated! {}".format(ret))
 
 # Estimate re-projection error
@@ -54,7 +68,7 @@ mean_error = 0
 for i in range(len(objpoints)):
     imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
     error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2) / len(imgpoints2)
-    print("Image {} error: {}".format(images[i], error))
+    print("Image {} re-projection error: {}".format(images[i], error))
     mean_error += error
 print( "Total re-projection error: {} (the lower the better)".format(mean_error/len(objpoints)))
 

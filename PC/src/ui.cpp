@@ -74,5 +74,6 @@ void Marker::UI()
 
 void ModelCube::UI()
 {
-    
+    ImGui::Text("Cube");
+    ImGui::Checkbox("Linestyle", &_lineMode);
 }

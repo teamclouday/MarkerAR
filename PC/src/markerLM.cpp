@@ -6,7 +6,6 @@
 // This file implements the Levenberg-Marquardt method
 // for pose projection matrix refinement
 
-// #define ERROR_EPS       1.0
 #define ERROR_EPS       0.001
 #define MAX_ITER        30
 
@@ -122,7 +121,7 @@ void Marker::refinePoseM(
         Eigen::Map<Eigen::VectorXf> residualVec(residual.data(), residual.size());
         for(int i = 0; i < 12; i++)
             err += residualVec[i] * residualVec[i];
-        std::cout << iter << "|" << err << std::endl;
+        // std::cout << iter << "|" << err << std::endl;
         if(err <= ERROR_EPS) break;
         if(err > prevErr)
         {
@@ -133,7 +132,7 @@ void Marker::refinePoseM(
         // update lambda
         lambdaLog10 = std::max(lambdaLog10-1, -16);
     }
-    std::cout << "LM err: " << err << std::endl;
+    // std::cout << "LM err: " << err << std::endl;
     // record new M
     _poseMRefined = glm::mat4x3(
         glm::vec3(M.col(0)[0], M.col(0)[1], M.col(0)[2]),

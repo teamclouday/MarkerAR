@@ -19,7 +19,6 @@ void main()
     // change Z up coordinate to Y up
     vec3 modelPos = vec3(inPos.x, inPos.z, -inPos.y);
     vec3 screenPos = cameraK * poseM * modelMat * vec4(modelPos, 1.0);
-    // vec2 pos = screenPos.xy;
     vec2 pos = screenPos.xy / vec2(cam_width, cam_height) * 2.0 - 1.0;
     if(ratio_img > ratio_win)
     {

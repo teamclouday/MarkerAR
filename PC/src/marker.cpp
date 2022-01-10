@@ -448,16 +448,6 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
         p2 = tmp;
     }
     // step 6: update and store data
-    // _marker_borderp1p2.x = (track[p1].x / _width) * 2.0 - 1.0;
-    // _marker_borderp1p2.y = (track[p1].y / _height) * 2.0 - 1.0;
-    // _marker_borderp1p2.z = (track[p2].x / _width) * 2.0 - 1.0;
-    // _marker_borderp1p2.w = (track[p2].y / _height) * 2.0 - 1.0;
-
-    // _marker_borderp3p4.x = (track[p3].x / _width) * 2.0 - 1.0;
-    // _marker_borderp3p4.y = (track[p3].y / _height) * 2.0 - 1.0;
-    // _marker_borderp3p4.z = (track[p4].x / _width) * 2.0 - 1.0;
-    // _marker_borderp3p4.w = (track[p4].y / _height) * 2.0 - 1.0;
-
     _marker_borderp1p2.x = track[p1].x;
     _marker_borderp1p2.y = track[p1].y;
     _marker_borderp1p2.z = track[p2].x;
@@ -467,6 +457,16 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
     _marker_borderp3p4.y = track[p3].y;
     _marker_borderp3p4.z = track[p4].x;
     _marker_borderp3p4.w = track[p4].y;
+
+    // _marker_borderp1p2.x = track[p1].x * 2.0f - _width;
+    // _marker_borderp1p2.y = track[p1].y * 2.0f - _height;
+    // _marker_borderp1p2.z = track[p2].x * 2.0f - _width;
+    // _marker_borderp1p2.w = track[p2].y * 2.0f - _height;
+
+    // _marker_borderp3p4.x = track[p3].x * 2.0f - _width;
+    // _marker_borderp3p4.y = track[p3].y * 2.0f - _height;
+    // _marker_borderp3p4.z = track[p4].x * 2.0f - _width;
+    // _marker_borderp3p4.w = track[p4].y * 2.0f - _height;
     return true;
 }
 
