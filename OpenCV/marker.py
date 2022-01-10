@@ -17,11 +17,22 @@ if os.path.exists("camera.pkl"):
     camera_matrix_loaded = True
 
 # define drawing at corners
-def draw(img, corners, imgpts):
+def drawAxis(img, corners, imgpts):
     corner = tuple(corners[0].ravel())
     cv2.line(img, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
     cv2.line(img, corner, tuple(imgpts[1].ravel()), (0,255,0), 5)
     cv2.line(img, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
+
+def drawCube(img, corners, imgpts):
+    imgpts = np.int32(imgpts).reshape(-1,2)
+    # draw ground floor in green
+    cv2.drawContours(img, [imgpts[:4]],-1,(0,255,0),-3)
+    # draw pillars in blue color
+    for i,j in zip(range(4),range(4,8)):
+        cv2.line(img, tuple(imgpts[i]), tuple(imgpts[j]),(255),3)
+    # draw top layer in red color
+    cv2.drawContours(img, [imgpts[4:]],-1,(0,0,255),3)
+    return img
 
 objp = np.array([
     [0.0, 0.0, 0.0],
@@ -33,6 +44,10 @@ axis = np.array([
     [0.5, 0.0, 0.0],
     [0.0, 0.5, 0.0],
     [0.0, 0.0, 0.5]
+])
+axisCube = np.array([
+    [0,0,0], [0,0.5,0], [0.5,0.5,0], [0.5,0,0],
+    [0,0,-0.5],[0,0.5,-0.5],[0.5,0.5,-0.5],[0.5,0,-0.5]
 ])
 
 while True:
@@ -72,13 +87,25 @@ while True:
 
             # Find the rotation and translation vectors.
             _, rvecs, tvecs = cv2.solvePnP(objp, corners, mtx, dist, flags=cv2.SOLVEPNP_ITERATIVE)
-            # print(rvecs, tvecs)
+            # undistorted = cv2.undistortPoints(corners, mtx, dist)
+            # fx = mtx[0, 0]
+            # fy = mtx[1, 1]
+            # cx = mtx[0, 2]
+            # cy = mtx[1, 2]
+            # for i in range(4):
+            #     undistorted[i, 0, 0] = undistorted[i, 0, 0] * fx + cx
+            #     undistorted[i, 0, 1] = undistorted[i, 0, 1] * fy + cy
+            # print("="*20)
+            # print(corners)
+            # print("-"*20)
+            # print(undistorted)
 
             # project 3D points to image plane
-            imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
+            # imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
+            # drawAxis(frame, corners, np.round(imgpts).astype(np.int32))
 
-            # print(imgpts)
-            draw(frame, corners, np.round(imgpts).astype(np.int32))
+            imgpts, jac = cv2.projectPoints(axisCube, rvecs, tvecs, mtx, dist)
+            drawCube(frame, corners, np.round(imgpts).astype(np.int32))
 
             # break because only one expected
             break

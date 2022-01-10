@@ -45,6 +45,8 @@ for fname in images:
 
 # Now calibrate camera
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+with open("camera.pkl", "wb") as outFile:
+    pickle.dump([mtx, dist, rvecs, tvecs], outFile)
 with open("camera.txt", "w") as outFile:
     # store original image size
     print("{},{}".format(gray.shape[0], gray.shape[1]), file=outFile)

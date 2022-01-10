@@ -197,7 +197,7 @@ void undistortPoints(
         // init error
         float error = std::numeric_limits<float>::max();
         // iteratively reduce distortion error
-        const int MAX_ITER = 30; // TODO: test this variable
+        const int MAX_ITER = 10;
         const float EPS = 0.001f;
         int j = 0;
         for(; j < MAX_ITER; j++)
@@ -240,9 +240,10 @@ void undistortPoints(
             }
         }
         // std::cout << j << "," << error << std::endl;
-        dst[i].x = x;
-        dst[i].y = y;
+        dst[i].x = x * fx + cx;
+        dst[i].y = y * fy + cy;
     }
+    // retrieve new positions
     p1 = dst[0];
     p2 = dst[1];
     p3 = dst[2];
@@ -404,10 +405,10 @@ void Marker::estimatePoseSVD(
     glm::vec2 p4 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
     glm::vec2 p3 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
     // undistort points
-    // undistortPoints(
-    //     cameraK, cameraDistK, cameraDistP,
-    //     p1, p2, p3, p4
-    // );
+    undistortPoints(
+        cameraK, cameraDistK, cameraDistP,
+        p1, p2, p3, p4
+    );
     // glm::mat3x4 mstarT = glm::transpose(
     //     cameraInvK * glm::mat4x3(
     //         glm::vec3(p1, 1.0f),
@@ -452,11 +453,12 @@ void Marker::estimatePoseSVD(
     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
     // decomposeHomoMatrixZhang(cameraK, cameraInvK, mstarT, H, objPoints, imgPoints, _poseM);
     decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
-    // _poseM = (_poseMRefined * 0.4f + _poseM * 0.6f);
     // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
     scalePoseM(cameraK, _poseM, q1, p1);
+    if(_poseMRefined[2][2] != 0.0f)
+        _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
-    std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
+    // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }
 
 // reference: https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
@@ -477,6 +479,11 @@ void Marker::estimatePoseLinear(
     glm::vec2 p2 = glm::vec2(_marker_borderp1p2.z, _marker_borderp1p2.w);
     glm::vec2 p3 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
     glm::vec2 p4 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
+    // undistort points
+    undistortPoints(
+        cameraK, cameraDistK, cameraDistP,
+        p1, p2, p3, p4
+    );
     // prepare q
     static glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
     static glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
@@ -512,8 +519,10 @@ void Marker::estimatePoseLinear(
     // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
     scalePoseM(cameraK, _poseM, q1, p1);
+    if(_poseMRefined[2][2] != 0.0f)
+        _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
-    std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
+    // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }
 
 // use opencv as reference

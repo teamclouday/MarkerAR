@@ -98,6 +98,12 @@ public:
         glUniform1f(glGetUniformLocation(_program, name), val);
     }
 
+    void uniformVec3(const char* name, const glm::vec3& val) const
+    {
+        if(!compiled) return;
+        glUniform3fv(glGetUniformLocation(_program, name), 1, glm::value_ptr(val));
+    }
+
     void uniformMat3x3(const char* name, const glm::mat3& matrix) const
     {
         if(!compiled) return;

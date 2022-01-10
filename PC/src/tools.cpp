@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include "model.hpp"
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -110,4 +111,68 @@ void Camera::loadCameraData()
     _camInvK = glm::inverse(_camK);
     _camDistCoeffK = glm::vec3(-3.58177671e-1,  5.58704262e-1, -8.93211088e-1);
     _camDistCoeffP = glm::vec2(8.46171348e-4, -4.12405134e-3);
+}
+
+bool Model::loadObj(
+    const std::string& filename,
+    std::vector<glm::vec3>& vertices,
+    std::vector<unsigned>& indices
+)
+{
+    // read file
+    std::ifstream inFile(filename.c_str());
+    if(!inFile.good())
+    {
+        std::cout << "Failed to read obj file: " << filename << std::endl;
+        return false;
+    }
+    char type = 'v';
+    float vertVal = 0.0f;
+    unsigned int indVal = 0;
+    std::string line;
+    std::stringstream sstr;
+    // prepare array
+    vertices.resize(0);
+    vertices.clear();
+    indices.resize(0);
+    indices.clear();
+    glm::vec3 vertex(0.0f);
+    glm::uvec3 face(0);
+    // start reading
+    while(std::getline(inFile, line))
+    {
+        sstr.clear();
+        sstr.str(line);
+        if(!(sstr >> type)) continue;
+        if(type == 'v')
+        {
+            if(sstr >> vertVal)
+                vertex.x = vertVal;
+            else continue;
+            if(sstr >> vertVal)
+                vertex.y = vertVal;
+            else continue;
+            if(sstr >> vertVal)
+                vertex.z = vertVal;
+            else continue;
+            vertices.push_back(vertex);
+        }
+        else if(type == 'f')
+        {
+            if(sstr >> indVal)
+                face.x = indVal;
+            else continue;
+            if(sstr >> indVal)
+                face.y = indVal;
+            else continue;
+            if(sstr >> indVal)
+                face.z = indVal;
+            else continue;
+            indices.push_back(face.x - 1);
+            indices.push_back(face.y - 1);
+            indices.push_back(face.z - 1);
+        }
+    }
+    if(vertices.size() == 0) return false;
+    return true;
 }

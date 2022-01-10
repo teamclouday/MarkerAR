@@ -29,7 +29,7 @@ int main()
             cam->width(),
             cam->height()
         );
-        model = std::make_shared<ModelCube>(
+        model = std::make_shared<ModelTeapot>(
             cam->width(),
             cam->height()
         );
