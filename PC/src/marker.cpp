@@ -122,6 +122,7 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
     {
         _marker_borderp1p2 = glm::vec4(0.0f);
         _marker_borderp3p4 = glm::vec4(0.0f);
+        _poseMRefined = glm::mat4x3(0.0f);
         update_corners();
     }
     else if(_marker_not_found < 30)

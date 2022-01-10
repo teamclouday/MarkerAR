@@ -90,7 +90,7 @@ int main()
             cam->groupY()
         );
         // estimate pose
-        marker->estimatePose(
+        marker->estimatePoseSVD(
             cam->cameraK(),
             cam->cameraInvK(),
             cam->cameraDistK(),

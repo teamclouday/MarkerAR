@@ -17,7 +17,7 @@ float reprojectionError(
     float error = 0.0f;
     for(size_t i = 0; i < 4; i++)
     {
-        auto projected = cameraK * M * glm::vec4(objPoints[i], 1.0f, 1.0f);
+        auto projected = cameraK * M * glm::vec4(objPoints[i], 0.0f, 1.0f);
         float dx = projected.x - imgPoints[i].x;
         float dy = projected.y - imgPoints[i].y;
         error += dx * dx + dy * dy;
@@ -381,13 +381,13 @@ void decomposeHomoMatrixStanford(
 // scale the estimated projection matrix
 void scalePoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q, const glm::vec2& p)
 {
-    auto tmp = cameraK * M * glm::vec4(q, 1.0f, 1.0f);
+    auto tmp = cameraK * M * glm::vec4(q, 0.0f, 1.0f);
     float scale = (p.x / tmp.x + p.y / tmp.y) * 0.5f;
     M *= scale;
 }
 
 // estimate pose from homography (SVD method)
-void Marker::estimatePose(
+void Marker::estimatePoseSVD(
     const glm::mat3& cameraK, const glm::mat3& cameraInvK,
     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 )
@@ -395,6 +395,7 @@ void Marker::estimatePose(
     if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);
+        _poseMRefined = glm::mat4x3(0.0f);
         return;
     }
     // prepare p
@@ -416,6 +417,10 @@ void Marker::estimatePose(
     //     )
     // );
     // prepare q
+    // const glm::vec2 q1 = glm::vec2(0.0f, 0.0f);
+    // const glm::vec2 q2 = glm::vec2(0.0f, 1.0f);
+    // const glm::vec2 q4 = glm::vec2(1.0f, 0.0f);
+    // const glm::vec2 q3 = glm::vec2(1.0f, 1.0f);
     const glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
     const glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
     const glm::vec2 q4 = glm::vec2( 1.0f, -1.0f);
@@ -447,64 +452,69 @@ void Marker::estimatePose(
     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
     // decomposeHomoMatrixZhang(cameraK, cameraInvK, mstarT, H, objPoints, imgPoints, _poseM);
     decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+    // _poseM = (_poseMRefined * 0.4f + _poseM * 0.6f);
+    // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
     scalePoseM(cameraK, _poseM, q1, p1);
-    std::cout << "Err " << reprojectionError(cameraK, _poseM, objPoints, imgPoints) << std::endl;
+    refinePoseM(cameraInvK, objPoints, imgPoints);
+    std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }
 
 // reference: https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
 // estimate pose from homography (linear equation method)
-// void Marker::estimatePose(
-//     const glm::mat3& cameraK, const glm::mat3& cameraInvK,
-//     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
-// )
-// {
-//     if(_marker_borderp1p2.x <= 0.0f)
-//     {
-//         _poseM = glm::mat4x3(0.0f);
-//         return;
-//     }
-//     // prepare p
-//     glm::vec2 p1 = glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y);
-//     glm::vec2 p2 = glm::vec2(_marker_borderp1p2.z, _marker_borderp1p2.w);
-//     glm::vec2 p3 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
-//     glm::vec2 p4 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
-//     // prepare q
-//     static glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
-//     static glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
-//     static glm::vec2 q3 = glm::vec2( 1.0f, -1.0f);
-//     static glm::vec2 q4 = glm::vec2( 1.0f,  1.0f);
-//     // set up matrix A
-//     Eigen::Matrix<float, 8, 8> A;
-//     A << q1.x, q1.y, 1.0f, 0.0f, 0.0f, 0.0f, -p1.x*q1.x, -p1.x*q1.y,
-//          0.0f, 0.0f, 0.0f, q1.x, q1.y, 1.0f, -p1.y*q1.x, -p1.y*q1.y,
+void Marker::estimatePoseLinear(
+    const glm::mat3& cameraK, const glm::mat3& cameraInvK,
+    const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
+)
+{
+    if(_marker_borderp1p2.x <= 0.0f)
+    {
+        _poseM = glm::mat4x3(0.0f);
+        _poseMRefined = glm::mat4x3(0.0f);
+        return;
+    }
+    // prepare p
+    glm::vec2 p1 = glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y);
+    glm::vec2 p2 = glm::vec2(_marker_borderp1p2.z, _marker_borderp1p2.w);
+    glm::vec2 p3 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
+    glm::vec2 p4 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
+    // prepare q
+    static glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
+    static glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
+    static glm::vec2 q3 = glm::vec2( 1.0f, -1.0f);
+    static glm::vec2 q4 = glm::vec2( 1.0f,  1.0f);
+    // set up matrix A
+    Eigen::Matrix<float, 8, 8> A;
+    A << q1.x, q1.y, 1.0f, 0.0f, 0.0f, 0.0f, -p1.x*q1.x, -p1.x*q1.y,
+         0.0f, 0.0f, 0.0f, q1.x, q1.y, 1.0f, -p1.y*q1.x, -p1.y*q1.y,
 
-//          q2.x, q2.y, 1.0f, 0.0f, 0.0f, 0.0f, -p2.x*q2.x, -p2.x*q2.y,
-//          0.0f, 0.0f, 0.0f, q2.x, q2.y, 1.0f, -p2.y*q2.x, -p2.y*q2.y,
+         q2.x, q2.y, 1.0f, 0.0f, 0.0f, 0.0f, -p2.x*q2.x, -p2.x*q2.y,
+         0.0f, 0.0f, 0.0f, q2.x, q2.y, 1.0f, -p2.y*q2.x, -p2.y*q2.y,
 
-//          q3.x, q3.y, 1.0f, 0.0f, 0.0f, 0.0f, -p3.x*q3.x, -p3.x*q3.y,
-//          0.0f, 0.0f, 0.0f, q3.x, q3.y, 1.0f, -p3.y*q3.x, -p3.y*q3.y,
+         q3.x, q3.y, 1.0f, 0.0f, 0.0f, 0.0f, -p3.x*q3.x, -p3.x*q3.y,
+         0.0f, 0.0f, 0.0f, q3.x, q3.y, 1.0f, -p3.y*q3.x, -p3.y*q3.y,
 
-//          q4.x, q4.y, 1.0f, 0.0f, 0.0f, 0.0f, -p4.x*q4.x, -p4.x*q4.y,
-//          0.0f, 0.0f, 0.0f, q4.x, q4.y, 1.0f, -p4.y*q4.x, -p4.y*q4.y;
+         q4.x, q4.y, 1.0f, 0.0f, 0.0f, 0.0f, -p4.x*q4.x, -p4.x*q4.y,
+         0.0f, 0.0f, 0.0f, q4.x, q4.y, 1.0f, -p4.y*q4.x, -p4.y*q4.y;
 
-//     Eigen::Vector<float, 8> b;
-//     b << p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y;
-//     auto h = A.colPivHouseholderQr().solve(b);
-//     glm::mat3 H = glm::mat3(
-//         glm::vec3(h[0], h[3], h[6]),
-//         glm::vec3(h[1], h[4], h[7]),
-//         glm::vec3(h[2], h[5], 1.0f)
-//     );
+    Eigen::Vector<float, 8> b;
+    b << p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y;
+    auto h = A.colPivHouseholderQr().solve(b);
+    glm::mat3 H = glm::mat3(
+        glm::vec3(h[0], h[3], h[6]),
+        glm::vec3(h[1], h[4], h[7]),
+        glm::vec3(h[2], h[5], 1.0f)
+    );
 
-//     std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
-//     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
-//     // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
-//     decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
-//     // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
-//     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
-//     scalePoseM(_poseM, q1, p1);
-//     std::cout << "Err " << reprojectionError(_poseM, objPoints, imgPoints) << std::endl;
-// }
+    std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
+    std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
+    // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
+    decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
+    scalePoseM(cameraK, _poseM, q1, p1);
+    refinePoseM(cameraInvK, objPoints, imgPoints);
+    std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
+}
 
 // use opencv as reference
 // estimate pose (OpenCV method)
@@ -516,6 +526,7 @@ void Marker::estimatePoseOpenCV(
     if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);
+        _poseMRefined = glm::mat4x3(0.0f);
         return;
     }
     std::vector<cv::Point2d> imgPoints = {
@@ -556,4 +567,6 @@ void Marker::estimatePoseOpenCV(
         glm::vec3(tvec.at<float>(0,0), tvec.at<float>(0,1), tvec.at<float>(0,2))
     );
     scalePoseM(cameraK, _poseM, glm::vec2(-1.0f, -1.0f), glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y));
+    // refinePoseM(cameraK, cameraInvK, objPoints, imgPoints);
+    // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }

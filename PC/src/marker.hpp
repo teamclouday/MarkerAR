@@ -34,7 +34,11 @@ public:
 
     void process(GLuint sourceImg, int groupX, int groupY);
     void drawCorners(float ratioCon, float ratioCam);
-    void estimatePose(
+    void estimatePoseSVD(
+        const glm::mat3& cameraK, const glm::mat3& cameraInvK,
+        const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
+    );
+    void estimatePoseLinear(
         const glm::mat3& cameraK, const glm::mat3& cameraInvK,
         const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
     );
@@ -53,7 +57,7 @@ public:
     // only get current texture
     GLuint lastTex() {return _tex[!_currentTex];}
     bool debug() {return _debug_mode && _debug_level < 2;}
-    glm::mat4x3 poseM() {return _poseM;}
+    glm::mat4x3 poseM() {return _poseMRefined;}
 
     void UI();
 
@@ -83,6 +87,7 @@ private:
     int _marker_not_found = 0;
     // variable for pose estimation
     glm::mat4x3 _poseM;
+    glm::mat4x3 _poseMRefined;
 
     int _debug_level = 0;
     bool _debug_mode = false;
@@ -91,8 +96,7 @@ private:
     bool fit_quadrilateral(std::vector<glm::vec2>& track);
     void update_corners();
     void refinePoseM(
-        const glm::mat3& cameraK,
-        const glm::mat4x3& prevM, const glm::mat4x3& currM,
+        const glm::mat3& cameraInvK,
         const std::vector<glm::vec2>& objPoints,
         const std::vector<glm::vec2>& imgPoints
     );

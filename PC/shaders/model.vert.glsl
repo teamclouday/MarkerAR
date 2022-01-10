@@ -16,6 +16,7 @@ uniform mat3 cameraK;
 void main()
 {
     vertColor = inColor;
+    // change Z up coordinate to Y up
     vec3 modelPos = vec3(inPos.x, inPos.z, -inPos.y);
     vec3 screenPos = cameraK * poseM * modelMat * vec4(modelPos, 1.0);
     // vec2 pos = screenPos.xy;
