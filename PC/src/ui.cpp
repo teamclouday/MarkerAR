@@ -75,15 +75,35 @@ void Marker::UI()
 void ModelCube::UI()
 {
     ImGui::Text("Cube");
+    ImGui::Separator();
     ImGui::Checkbox("Linestyle", &_lineMode);
+    ImGui::Separator();
     ImGui::DragFloat3("Translation", &_translation[0], 0.01f, -5.0f, 5.0f, "%.2f");
-    ImGui::DragFloat3("Scale", &_scale, 0.01f, 0.01f, 10.0f, "%.2f");
+    ImGui::DragFloat("Scale", &_scale, 0.01f, 0.01f, 10.0f, "%.2f");
 }
 
 void ModelTeapot::UI()
 {
     ImGui::Text("Teapot");
+    ImGui::Separator();
     ImGui::Checkbox("Linestyle", &_lineMode);
+    ImGui::Separator();
     ImGui::DragFloat3("Translation", &_translation[0], 0.01f, -5.0f, 5.0f, "%.2f");
-    ImGui::DragFloat3("Scale", &_scale, 0.001f, 0.001f, 10.0f, "%.3f");
+    ImGui::DragFloat("Scale", &_scale, 0.001f, 0.001f, 10.0f, "%.3f");
+    ImGui::Separator();
+    ImGui::DragFloat3("Light Pos", &_lightPos[0], 0.01f);
+    ImGui::ColorEdit3("Diffuse", &_model_diffuse[0]);
+}
+
+void ModelBunny::UI()
+{
+    ImGui::Text("Bunny");
+    ImGui::Separator();
+    ImGui::Checkbox("Linestyle", &_lineMode);
+    ImGui::Separator();
+    ImGui::DragFloat3("Translation", &_translation[0], 0.01f, -5.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("Scale", &_scale, 0.001f, 0.001f, 100.0f, "%.3f");
+    ImGui::Separator();
+    ImGui::DragFloat3("Light Pos", &_lightPos[0], 0.01f);
+    ImGui::ColorEdit3("Diffuse", &_model_diffuse[0]);
 }

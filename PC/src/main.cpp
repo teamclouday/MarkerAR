@@ -17,7 +17,6 @@ int main()
     std::shared_ptr<Camera> cam;
     std::shared_ptr<Marker> marker;
     std::shared_ptr<Shader> render;
-
     std::shared_ptr<Model> model;
 
     // initialze all
@@ -29,7 +28,7 @@ int main()
             cam->width(),
             cam->height()
         );
-        model = std::make_shared<ModelTeapot>(
+        model = std::make_shared<ModelBunny>(
             cam->width(),
             cam->height()
         );

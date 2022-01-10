@@ -61,4 +61,23 @@ private:
     float _scale = 0.5f;
     glm::vec3 _translation = glm::vec3(0.0f, 0.5f, 0.0f);
     glm::vec3 _lightPos = glm::vec3(1.0f);
+    glm::vec3 _model_diffuse = glm::vec3(0.6f, 1.0f, 0.87f);
+};
+
+class ModelBunny : public Model
+{
+public:
+    ModelBunny(int camWidth, int camHeight);
+    ~ModelBunny();
+    void UI();
+    void render(
+        const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        float cameraRatio, float windowRatio
+    );
+
+private:
+    float _scale = 20.0f;
+    glm::vec3 _translation = glm::vec3(0.0f);
+    glm::vec3 _lightPos = glm::vec3(1.0f);
+    glm::vec3 _model_diffuse = glm::vec3(0.84f, 0.25f, 0.96f);
 };
