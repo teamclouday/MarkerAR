@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <memory>
 #include <cmath>
@@ -68,6 +69,12 @@ public:
         _denoise_shader->compile();
         // set camera calibration matrix
         loadCameraData();
+        // create projection matrix
+        _camProj = glm::ortho(
+            0.0f, static_cast<float>(_width),
+            0.0f, static_cast<float>(_height),
+            0.0f, -10.0f
+        );
     }
 
     ~Camera()
@@ -134,6 +141,7 @@ public:
     glm::mat3 cameraInvK() const {return _camInvK;}
     glm::vec3 cameraDistK() const {return _camDistCoeffK;}
     glm::vec2 cameraDistP() const {return _camDistCoeffP;}
+    glm::mat4 cameraProj() const {return _camProj;}
 
     void UI();
 
@@ -152,6 +160,7 @@ private:
     glm::mat3 _camInvK;
     glm::vec3 _camDistCoeffK;
     glm::vec2 _camDistCoeffP;
+    glm::mat4 _camProj;
 
     void loadCameraData();
 };

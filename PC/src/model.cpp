@@ -115,6 +115,7 @@ ModelCube::~ModelCube()
 
 void ModelCube::render(
     const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
     float cameraRatio, float windowRatio
 )
 {
@@ -127,11 +128,10 @@ void ModelCube::render(
     );
     _shader->uniformMat4x3("poseM", poseM);
     _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
     _shader->uniformMat3x3("cameraK", cameraK);
     _shader->uniformFloat("ratio_img", cameraRatio);
     _shader->uniformFloat("ratio_win", windowRatio);
-    _shader->uniformFloat("cam_width", _width);
-    _shader->uniformFloat("cam_height", _height);
     glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, _count);
     glBindVertexArray(0);
@@ -181,6 +181,7 @@ ModelTeapot::~ModelTeapot()
 
 void ModelTeapot::render(
     const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
     float cameraRatio, float windowRatio
 )
 {
@@ -193,11 +194,10 @@ void ModelTeapot::render(
     );
     _shader->uniformMat4x3("poseM", poseM);
     _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
     _shader->uniformMat3x3("cameraK", cameraK);
     _shader->uniformFloat("ratio_img", cameraRatio);
     _shader->uniformFloat("ratio_win", windowRatio);
-    _shader->uniformFloat("cam_width", _width);
-    _shader->uniformFloat("cam_height", _height);
     _shader->uniformVec3("lightPos", _lightPos);
     _shader->uniformVec3("diffuse", _model_diffuse);
     glBindVertexArray(_vao);
@@ -248,6 +248,7 @@ ModelBunny::~ModelBunny()
 
 void ModelBunny::render(
     const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
     float cameraRatio, float windowRatio
 )
 {
@@ -260,11 +261,10 @@ void ModelBunny::render(
     );
     _shader->uniformMat4x3("poseM", poseM);
     _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
     _shader->uniformMat3x3("cameraK", cameraK);
     _shader->uniformFloat("ratio_img", cameraRatio);
     _shader->uniformFloat("ratio_win", windowRatio);
-    _shader->uniformFloat("cam_width", _width);
-    _shader->uniformFloat("cam_height", _height);
     _shader->uniformVec3("lightPos", _lightPos);
     _shader->uniformVec3("diffuse", _model_diffuse);
     glBindVertexArray(_vao);

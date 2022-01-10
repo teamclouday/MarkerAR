@@ -7,19 +7,19 @@ layout (location = 0) out vec3 vertColor;
 
 uniform float ratio_img;
 uniform float ratio_win;
-uniform float cam_width;
-uniform float cam_height;
 uniform mat4x3 poseM;
 uniform mat4 modelMat;
 uniform mat3 cameraK;
+uniform mat4 cameraProj;
 
 void main()
 {
     vertColor = inColor;
-    // change Z up coordinate to Y up
-    vec3 modelPos = vec3(inPos.x, inPos.z, -inPos.y);
-    vec3 screenPos = cameraK * poseM * modelMat * vec4(modelPos, 1.0);
-    vec2 pos = screenPos.xy / vec2(cam_width, cam_height) * 2.0 - 1.0;
+    vec4 pos = modelMat * vec4(inPos, 1.0);
+    pos.yz = vec2(pos.z, -pos.y);
+    vec3 screenPos = cameraK * poseM * pos;
+    // refer to https://nghiaho.com/?p=2559
+    pos = cameraProj * vec4(screenPos, 1.0);
     if(ratio_img > ratio_win)
     {
         pos.y = pos.y * ratio_win / ratio_img;
@@ -28,6 +28,5 @@ void main()
     {
         pos.x = pos.x * ratio_img / ratio_win;
     }
-    pos.y *= ratio_img;
-    gl_Position = vec4(pos, screenPos.z, 1.0);
+    gl_Position = vec4(pos.xy, screenPos.z, 1.0);
 }

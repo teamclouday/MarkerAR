@@ -9,6 +9,7 @@ uniform float cam_height;
 
 void main()
 {
+    // vec2 pos = inPos / vec2(cam_width, cam_height);
     vec2 pos = inPos / vec2(cam_width, cam_height) * 2.0 - 1.0;
     if(ratio_img > ratio_win)
     {

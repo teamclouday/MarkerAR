@@ -52,16 +52,11 @@ void Marker::UI()
     ImGui::DragInt("Max Iteration", &_tracing_max_iter, 5.0f, 200, 10000);
     ImGui::DragInt("Min Contour Length", &_tracing_thres_contour, 5.0f, 10, 5000);
     ImGui::DragFloat("Min Quadra Distance", &_tracing_thres_quadra, 0.01f, 0.01f, 20.0f, "%.2f");
+    ImGui::Separator();
     ImGui::Text("p1 = (%.3f, %.3f)", _marker_borderp1p2.x, _marker_borderp1p2.y);
     ImGui::Text("p2 = (%.3f, %.3f)", _marker_borderp1p2.z, _marker_borderp1p2.w);
     ImGui::Text("p3 = (%.3f, %.3f)", _marker_borderp3p4.x, _marker_borderp3p4.y);
     ImGui::Text("p4 = (%.3f, %.3f)", _marker_borderp3p4.z, _marker_borderp3p4.w);
-    ImGui::Separator();
-    ImGui::Text("Pose Estimation");
-    ImGui::Text("%.2f, %.2f, %.2f, %.2f\n,%.2f, %.2f, %.2f, %.2f\n%.2f, %.2f, %.2f, %.2f",
-        _poseM[0][0], _poseM[1][0], _poseM[2][0], _poseM[3][0],
-        _poseM[0][1], _poseM[1][1], _poseM[2][1], _poseM[3][1],
-        _poseM[0][2], _poseM[1][2], _poseM[2][2], _poseM[3][2]);
     ImGui::Separator();
     ImGui::Checkbox("Debug Mode", &_debug_mode);
     if(_debug_mode)
@@ -70,6 +65,18 @@ void Marker::UI()
         ImGui::RadioButton("Thresholding", &_debug_level, 1);
         ImGui::RadioButton("Contour Edge", &_debug_level, 2);
     }
+}
+
+void Marker::UIpose()
+{
+    ImGui::Text("Estimated M");
+    ImGui::Text("%.2f, %.2f, %.2f, %.2f\n%.2f, %.2f, %.2f, %.2f\n%.2f, %.2f, %.2f, %.2f",
+        _poseM[0][0], _poseM[1][0], _poseM[2][0], _poseM[3][0],
+        _poseM[0][1], _poseM[1][1], _poseM[2][1], _poseM[3][1],
+        _poseM[0][2], _poseM[1][2], _poseM[2][2], _poseM[3][2]);
+    ImGui::Separator();
+    ImGui::Text("Reprojection Error: %.3f", _err_reproj);
+    ImGui::Text("Levenberg Error: %.3f", _err_LM);
 }
 
 void ModelCube::UI()

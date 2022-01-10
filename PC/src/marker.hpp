@@ -60,6 +60,7 @@ public:
     glm::mat4x3 poseM() {return _poseMRefined;}
 
     void UI();
+    void UIpose();
 
 private:
     int _width, _height;
@@ -88,6 +89,7 @@ private:
     // variable for pose estimation
     glm::mat4x3 _poseM;
     glm::mat4x3 _poseMRefined;
+    float _err_reproj = 0.0f, _err_LM = 0.0f;
 
     int _debug_level = 0;
     bool _debug_mode = false;

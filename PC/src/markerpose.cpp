@@ -1,3 +1,4 @@
+// This file contains my implementation for pose esimtation
 #include "marker.hpp"
 #include <Eigen/SVD>
 #include <Eigen/Dense>
@@ -6,6 +7,30 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+
+// refer to: https://www.dropbox.com/s/qkulg4j64lyn0qa/2018_proj_geo_for_cv_projcv_assignment.pdf?dl=0
+// update computed rotation matrix
+void updateRotation(glm::mat4x3& M)
+{
+    Eigen::Matrix3f R;
+    R << M[0][0], M[1][0], M[2][0],
+         M[0][1], M[1][1], M[2][1],
+         M[0][2], M[1][2], M[2][2];
+    Eigen::JacobiSVD<Eigen::MatrixXf> svdSolver(R, Eigen::ComputeFullV | Eigen::ComputeFullU);
+    R = svdSolver.matrixU() * svdSolver.matrixV().transpose();
+    M[0][0] = R.col(0)[0];
+    M[0][1] = R.col(0)[1];
+    M[0][2] = R.col(0)[2];
+    M[1][0] = R.col(1)[0];
+    M[1][1] = R.col(1)[1];
+    M[1][2] = R.col(1)[2];
+    M[2][0] = R.col(2)[0];
+    M[2][1] = R.col(2)[1];
+    M[2][2] = R.col(2)[2];
+    M[0] = glm::normalize(M[0]);
+    M[1] = glm::normalize(M[1]);
+    M[2] = glm::cross(M[0], M[1]);
+}
 
 // compute reprojection error
 float reprojectionError(
@@ -198,7 +223,7 @@ void undistortPoints(
         float error = std::numeric_limits<float>::max();
         // iteratively reduce distortion error
         const int MAX_ITER = 10;
-        const float EPS = 0.001f;
+        const float EPS = 0.0005f;
         int j = 0;
         for(; j < MAX_ITER; j++)
         {
@@ -285,8 +310,27 @@ void decomposeHomoMatrixInternet(
     // set rotations
     outputM[0] = glm::normalize(H[0]);
     outputM[1] = glm::normalize(H[1]);
+    // outputM[2] = glm::cross(outputM[0], outputM[1]);
+    outputM[2] = glm::normalize(glm::cross(outputM[0], outputM[1]));
+}
+
+// refer to https://gist.github.com/inspirit/740979/97f54a63eb5f61f8f2eb578d60eb44839556ff3f
+void decomposeHomoMatrixInternet2(
+    const glm::mat3& cameraK, const glm::mat3& cameraInvK, glm::mat3 H, glm::mat4x3& outputM
+)
+{
+    H = cameraInvK * H;
+    float lambda = 1.0f / glm::length(H[0]);
+    H *= lambda;
+    // float tnorm = (glm::length(H[0]) + glm::length(H[1])) * 0.5f;
+    // set translation
+    outputM[3] = H[2];
+    // set rotations
+    outputM[0] = H[0];
+    outputM[1] = H[1];
     outputM[2] = glm::cross(outputM[0], outputM[1]);
 }
+
 
 // refer to https://courses.cs.duke.edu//spring22/compsci527/notes/n_10_reconstruction.pdf
 // decompose homography matrix
@@ -383,8 +427,15 @@ void decomposeHomoMatrixStanford(
 void scalePoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q, const glm::vec2& p)
 {
     auto tmp = cameraK * M * glm::vec4(q, 0.0f, 1.0f);
-    float scale = (p.x / tmp.x + p.y / tmp.y) * 0.5f;
+    float scale = std::abs(p.x / tmp.x);
+    // float scale = (p.x / tmp.x + p.y / tmp.y) * 0.5f;
     M *= scale;
+}
+
+void testPoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q)
+{
+    auto tmp = cameraK * M * glm::vec4(q, 0.0f, 1.0f);
+    std::cout << tmp.x << "," << tmp.y << "," << tmp.z << std::endl;
 }
 
 // estimate pose from homography (SVD method)
@@ -402,8 +453,8 @@ void Marker::estimatePoseSVD(
     // prepare p
     glm::vec2 p1 = glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y);
     glm::vec2 p2 = glm::vec2(_marker_borderp1p2.z, _marker_borderp1p2.w);
-    glm::vec2 p4 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
-    glm::vec2 p3 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
+    glm::vec2 p3 = glm::vec2(_marker_borderp3p4.x, _marker_borderp3p4.y);
+    glm::vec2 p4 = glm::vec2(_marker_borderp3p4.z, _marker_borderp3p4.w);
     // undistort points
     undistortPoints(
         cameraK, cameraDistK, cameraDistP,
@@ -424,8 +475,8 @@ void Marker::estimatePoseSVD(
     // const glm::vec2 q3 = glm::vec2(1.0f, 1.0f);
     const glm::vec2 q1 = glm::vec2(-1.0f, -1.0f);
     const glm::vec2 q2 = glm::vec2(-1.0f,  1.0f);
-    const glm::vec2 q4 = glm::vec2( 1.0f, -1.0f);
-    const glm::vec2 q3 = glm::vec2( 1.0f,  1.0f);
+    const glm::vec2 q3 = glm::vec2( 1.0f, -1.0f);
+    const glm::vec2 q4 = glm::vec2( 1.0f,  1.0f);
     // set up matrix A
     Eigen::Matrix<float, 8, 9> A;
     A << q1.x, q1.y, 1.0f, 0.0f, 0.0f, 0.0f, -p1.x*q1.x, -p1.x*q1.y, -p1.x,
@@ -452,12 +503,17 @@ void Marker::estimatePoseSVD(
     std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
     // decomposeHomoMatrixZhang(cameraK, cameraInvK, mstarT, H, objPoints, imgPoints, _poseM);
-    decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
-    // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
-    scalePoseM(cameraK, _poseM, q1, p1);
+    // decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+    decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixInternet2(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
+    // updateRotation(_poseM);
+    scalePoseM(cameraK, _poseM, q3, p3);
     if(_poseMRefined[2][2] != 0.0f)
-        _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
+        _poseM = (_poseMRefined + _poseM) * 0.5f;
     refinePoseM(cameraInvK, objPoints, imgPoints);
+    // testPoseM(cameraK, _poseMRefined, q1);
+    _err_reproj = reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints);
     // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }
 
@@ -518,10 +574,12 @@ void Marker::estimatePoseLinear(
     decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
     // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
+    // updateRotation(_poseM);
     scalePoseM(cameraK, _poseM, q1, p1);
     if(_poseMRefined[2][2] != 0.0f)
         _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
+    _err_reproj = reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints);
     // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }
 

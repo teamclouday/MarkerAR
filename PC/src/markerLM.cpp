@@ -1,10 +1,10 @@
+// This file implements the Levenberg-Marquardt method
+// for pose projection matrix refinement
 #include "marker.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 #include <limits>
 #include <iostream>
-// This file implements the Levenberg-Marquardt method
-// for pose projection matrix refinement
 
 #define ERROR_EPS       0.001
 #define MAX_ITER        30
@@ -65,7 +65,7 @@ void Marker::refinePoseM(
     Eigen::Matrix<float, 3, 4> imgMatrix;
     imgMatrix << imgPoints[0].x, imgPoints[1].x, imgPoints[2].x, imgPoints[3].x,
                  imgPoints[0].y, imgPoints[1].y, imgPoints[2].y, imgPoints[3].y,
-                 1.0f,           1.0f,           1.0f,           1.0f;
+                 0.0f,           0.0f,           0.0f,           0.0f;
     // here we are minimizing sum(K^-1 p - M q)^2
     // if K M q = p, then M q = K^-1 p
     imgMatrix = Kinv * imgMatrix;
@@ -132,7 +132,8 @@ void Marker::refinePoseM(
         // update lambda
         lambdaLog10 = std::max(lambdaLog10-1, -16);
     }
-    // std::cout << "LM err: " << err << std::endl;
+    _err_LM = err;
+    // std::cout << "LM err: " << err << "(" << iter << ")" << std::endl;
     // record new M
     _poseMRefined = glm::mat4x3(
         glm::vec3(M.col(0)[0], M.col(0)[1], M.col(0)[2]),

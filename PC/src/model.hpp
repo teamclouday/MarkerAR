@@ -12,6 +12,7 @@ public:
     virtual void UI() = 0;
     virtual void render(
         const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
         float cameraRatio, float windowRatio
     ) = 0;
 
@@ -38,6 +39,7 @@ public:
     void UI();
     void render(
         const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
         float cameraRatio, float windowRatio
     );
 
@@ -54,6 +56,7 @@ public:
     void UI();
     void render(
         const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
         float cameraRatio, float windowRatio
     );
 
@@ -72,6 +75,7 @@ public:
     void UI();
     void render(
         const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
         float cameraRatio, float windowRatio
     );
 

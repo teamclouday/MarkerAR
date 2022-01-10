@@ -28,7 +28,7 @@ int main()
             cam->width(),
             cam->height()
         );
-        model = std::make_shared<ModelBunny>(
+        model = std::make_shared<ModelTeapot>(
             cam->width(),
             cam->height()
         );
@@ -64,6 +64,11 @@ int main()
             if(ImGui::BeginTabItem("Marker"))
             {
                 marker->UI();
+                ImGui::EndTabItem();
+            }
+            if(ImGui::BeginTabItem("Pose"))
+            {
+                marker->UIpose();
                 ImGui::EndTabItem();
             }
             if(ImGui::BeginTabItem("Model"))
@@ -110,6 +115,7 @@ int main()
         // use estimated pose to render a model
         model->render(
             cam->cameraK(), marker->poseM(),
+            cam->cameraProj(),
             cam->ratio(), con->ratio()
         );
         con->endFrame(renderUI);
