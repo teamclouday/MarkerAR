@@ -125,7 +125,7 @@ void Marker::refinePoseM(
         if(err <= ERROR_EPS) break;
         if(err > prevErr)
         {
-            lambdaLog10 = std::max(lambdaLog10+1, 16);
+            lambdaLog10 = std::min(lambdaLog10+1, 16);
             err = std::numeric_limits<float>::max();
             continue;
         }
