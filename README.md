@@ -1,7 +1,13 @@
 # Marker
 Implement and play with marker detection.
 
-Most knowledge is from book "Augmented Reality: Principles and Practice".
+Knowledge is from book "Augmented Reality: Principles and Practice", and online resources (commented in code).
+
+------
+
+### PC Version
+
+<img src="Images/MarkerPC.gif" width="600" alt="markerPC">
 
 ------
 
@@ -9,7 +15,7 @@ Most knowledge is from book "Augmented Reality: Principles and Practice".
 
 The marker I'm using is simply like this:  
 
-<img src="marker.png" width="200" alt="marker">
+<img src="Images/marker.png" width="200" alt="marker">
 
 1. Convert image to gray scale on GPU compute shader  
    Dot product of image color with `(0.299, 0.587, 0.114)`  
