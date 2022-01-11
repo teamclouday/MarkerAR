@@ -444,6 +444,7 @@ void Marker::estimatePoseSVD(
     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 )
 {
+    if(!_new_marker) return;
     if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);
@@ -509,8 +510,8 @@ void Marker::estimatePoseSVD(
     // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
     // updateRotation(_poseM);
     scalePoseM(cameraK, _poseM, q3, p3);
-    if(_poseMRefined[2][2] != 0.0f)
-        _poseM = (_poseMRefined + _poseM) * 0.5f;
+    // if(_poseMRefined[2][2] != 0.0f)
+    //     _poseM = (_poseMRefined * 0.8f + _poseM * 0.2f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
     // testPoseM(cameraK, _poseMRefined, q1);
     _err_reproj = reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints);
@@ -524,6 +525,7 @@ void Marker::estimatePoseLinear(
     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 )
 {
+    if(!_new_marker) return;
     if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);
@@ -576,8 +578,8 @@ void Marker::estimatePoseLinear(
     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
     // updateRotation(_poseM);
     scalePoseM(cameraK, _poseM, q1, p1);
-    if(_poseMRefined[2][2] != 0.0f)
-        _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
+    // if(_poseMRefined[2][2] != 0.0f)
+    //     _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
     _err_reproj = reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints);
     // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
@@ -590,6 +592,7 @@ void Marker::estimatePoseOpenCV(
     const glm::vec3& cameraDistK, const glm::vec2& cameraDistP
 )
 {
+    if(!_new_marker) return;
     if(_marker_borderp1p2.x <= 0.0f)
     {
         _poseM = glm::mat4x3(0.0f);

@@ -274,3 +274,137 @@ void ModelBunny::render(
     if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_DEPTH_TEST);
 }
+
+
+ModelTyra::ModelTyra(int camWidth, int camHeight)
+{
+    _width = camWidth;
+    _height = camHeight;
+    // load obj data
+    std::vector<glm::vec3> vertices;
+    std::vector<unsigned> indices;
+    if(!loadObj("models/tyra.obj", vertices, indices))
+        throw std::runtime_error("Failed to load tyra!");
+    _count = static_cast<int>(indices.size());
+    // create array buffers
+    GLuint vbo;
+    glGenVertexArrays(1, &_vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &_ebo);
+    glBindVertexArray(_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float)*3, vertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned), indices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+    // load shaders
+    _shader = std::make_shared<Shader>();
+    _shader->add("shaders/model.lighted.vert.glsl", GL_VERTEX_SHADER);
+    _shader->add("shaders/model.lighted.frag.glsl", GL_FRAGMENT_SHADER);
+    _shader->compile();
+    _lineMode = false;
+}
+
+ModelTyra::~ModelTyra()
+{
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteBuffers(1, &_ebo);
+}
+
+void ModelTyra::render(
+    const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
+    float cameraRatio, float windowRatio
+)
+{
+    glEnable(GL_DEPTH_TEST);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glUseProgram(_shader->program());
+    glm::mat4 modelMatrix = glm::translate(
+        glm::scale(glm::mat4(1.0f), glm::vec3(_scale)),
+        _translation
+    );
+    _shader->uniformMat4x3("poseM", poseM);
+    _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
+    _shader->uniformMat3x3("cameraK", cameraK);
+    _shader->uniformFloat("ratio_img", cameraRatio);
+    _shader->uniformFloat("ratio_win", windowRatio);
+    _shader->uniformVec3("lightPos", _lightPos);
+    _shader->uniformVec3("diffuse", _model_diffuse);
+    glBindVertexArray(_vao);
+    glDrawElements(GL_TRIANGLES, _count, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_DEPTH_TEST);
+}
+
+
+ModelArmadillo::ModelArmadillo(int camWidth, int camHeight)
+{
+    _width = camWidth;
+    _height = camHeight;
+    // load obj data
+    std::vector<glm::vec3> vertices;
+    std::vector<unsigned> indices;
+    if(!loadObj("models/armadillo.obj", vertices, indices))
+        throw std::runtime_error("Failed to load armadillo!");
+    _count = static_cast<int>(indices.size());
+    // create array buffers
+    GLuint vbo;
+    glGenVertexArrays(1, &_vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &_ebo);
+    glBindVertexArray(_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float)*3, vertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned), indices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(0));
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+    // load shaders
+    _shader = std::make_shared<Shader>();
+    _shader->add("shaders/model.lighted.vert.glsl", GL_VERTEX_SHADER);
+    _shader->add("shaders/model.lighted.frag.glsl", GL_FRAGMENT_SHADER);
+    _shader->compile();
+    _lineMode = false;
+}
+
+ModelArmadillo::~ModelArmadillo()
+{
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteBuffers(1, &_ebo);
+}
+
+void ModelArmadillo::render(
+    const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
+    float cameraRatio, float windowRatio
+)
+{
+    glEnable(GL_DEPTH_TEST);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glUseProgram(_shader->program());
+    glm::mat4 modelMatrix = glm::translate(
+        glm::scale(glm::mat4(1.0f), glm::vec3(_scale)),
+        _translation
+    );
+    _shader->uniformMat4x3("poseM", poseM);
+    _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
+    _shader->uniformMat3x3("cameraK", cameraK);
+    _shader->uniformFloat("ratio_img", cameraRatio);
+    _shader->uniformFloat("ratio_win", windowRatio);
+    _shader->uniformVec3("lightPos", _lightPos);
+    _shader->uniformVec3("diffuse", _model_diffuse);
+    glBindVertexArray(_vao);
+    glDrawElements(GL_TRIANGLES, _count, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_DEPTH_TEST);
+}

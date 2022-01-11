@@ -80,9 +80,10 @@ private:
     int _image_scan_step;
     glm::vec4 _marker_borderp1p2;
     glm::vec4 _marker_borderp3p4;
+    bool _new_marker = false;
     int _tracing_max_iter = 5000;
     int _tracing_thres_contour = 200;
-    float _tracing_thres_quadra = 4.0f;
+    float _tracing_thres_quadra = 6.0f;
     // variables for marker render
     GLuint _drawVAO, _drawVBO;
     int _marker_not_found = 0;

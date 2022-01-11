@@ -83,5 +83,43 @@ private:
     float _scale = 20.0f;
     glm::vec3 _translation = glm::vec3(0.0f);
     glm::vec3 _lightPos = glm::vec3(1.0f);
-    glm::vec3 _model_diffuse = glm::vec3(0.84f, 0.25f, 0.96f);
+    glm::vec3 _model_diffuse = glm::vec3(0.87f, 1.0f, 0.848f);
+};
+
+class ModelTyra : public Model
+{
+public:
+    ModelTyra(int camWidth, int camHeight);
+    ~ModelTyra();
+    void UI();
+    void render(
+        const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
+        float cameraRatio, float windowRatio
+    );
+
+private:
+    float _scale = 0.9f;
+    glm::vec3 _translation = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 _lightPos = glm::vec3(1.0f);
+    glm::vec3 _model_diffuse = glm::vec3(0.485f, 0.413f, 0.297f);
+};
+
+class ModelArmadillo : public Model
+{
+public:
+    ModelArmadillo(int camWidth, int camHeight);
+    ~ModelArmadillo();
+    void UI();
+    void render(
+        const glm::mat3& cameraK, const glm::mat4x3& poseM,
+        const glm::mat4& cameraProj,
+        float cameraRatio, float windowRatio
+    );
+
+private:
+    float _scale = 1.0f;
+    glm::vec3 _translation = glm::vec3(0.0f, 0.5f, 0.0f);
+    glm::vec3 _lightPos = glm::vec3(1.0f, 1.0f, -1.0f);
+    glm::vec3 _model_diffuse = glm::vec3(1.0f);
 };

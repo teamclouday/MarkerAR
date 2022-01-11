@@ -120,6 +120,7 @@ void Marker::process(GLuint sourceImg, int groupX, int groupY)
     }
     else if(_marker_borderp1p2.x >= 0.0f && _marker_not_found > 20)
     {
+        _new_marker = true;
         _marker_borderp1p2 = glm::vec4(0.0f);
         _marker_borderp3p4 = glm::vec4(0.0f);
         _poseMRefined = glm::mat4x3(0.0f);
@@ -447,6 +448,26 @@ bool Marker::fit_quadrilateral(std::vector<glm::vec2>& track)
         p3 = p2;
         p2 = tmp;
     }
+    // step 6: compare with previous data
+    float diff = 0.0f;
+    diff += std::abs(_marker_borderp1p2.x - track[p1].x);
+    diff += std::abs(_marker_borderp1p2.y - track[p1].y);
+    diff += std::abs(_marker_borderp1p2.z - track[p2].x);
+    diff += std::abs(_marker_borderp1p2.w - track[p2].y);
+
+    diff += std::abs(_marker_borderp3p4.x - track[p3].x);
+    diff += std::abs(_marker_borderp3p4.y - track[p3].y);
+    diff += std::abs(_marker_borderp3p4.z - track[p4].x);
+    diff += std::abs(_marker_borderp3p4.w - track[p4].y);
+
+    // if less than 8 pixels difference, skip this update
+    if(diff < 8)
+    {
+        _new_marker = false;
+        return true;
+    }
+    _new_marker = true;
+
     // step 6: update and store data
     _marker_borderp1p2.x = track[p1].x;
     _marker_borderp1p2.y = track[p1].y;

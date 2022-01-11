@@ -126,7 +126,7 @@ bool Model::loadObj(
         std::cout << "Failed to read obj file: " << filename << std::endl;
         return false;
     }
-    char type = 'v';
+    std::string type;
     float vertVal = 0.0f;
     unsigned int indVal = 0;
     std::string line;
@@ -144,7 +144,8 @@ bool Model::loadObj(
         sstr.clear();
         sstr.str(line);
         if(!(sstr >> type)) continue;
-        if(type == 'v')
+        if(type.length() > 1) continue;
+        if(type[0] == 'v')
         {
             if(sstr >> vertVal)
                 vertex.x = vertVal;
@@ -157,7 +158,7 @@ bool Model::loadObj(
             else continue;
             vertices.push_back(vertex);
         }
-        else if(type == 'f')
+        else if(type[0] == 'f')
         {
             if(sstr >> indVal)
                 face.x = indVal;
@@ -173,6 +174,6 @@ bool Model::loadObj(
             indices.push_back(face.z - 1);
         }
     }
-    if(vertices.size() == 0) return false;
+    if(vertices.size() == 0 || indices.size() == 0) return false;
     return true;
 }
