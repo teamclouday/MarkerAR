@@ -80,12 +80,13 @@ Run SVD on `A` and get `U D V^T` and `h` is the last column in matrix `V`.
 Reconstruct 3x3 matrix `H`, and we need to extract `R` and `t` from it:
 ```
 HK = K^-1 H
-n = ( norm(H.col0) + norm(H.col1) ) / 2
+n = ( norm(HK.col0) + norm(HK.col1) ) / 2
 t = H.col2 / n
-r1 = normalize( H.col0 )
-r2 = normalize( H.col1 )
+r1 = normalize( HK.col0 )
+r2 = normalize( HK.col1 )
 r3 = normalize( r1 x r2 )
 R = [r1 r2 r3]
+M = [R t]
 ```
 Note that there are many ways to do it. Here I illustrate a simple one I found online.  
 Besides, you may also need to undistort `p` first given camera distortion coefficients (Details can be found in OpenCV source code of function `undisortPoints`).  
