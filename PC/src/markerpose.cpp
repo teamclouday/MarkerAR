@@ -610,7 +610,7 @@ void Marker::estimatePoseOpenCV(
     };
     // std::vector<cv::Point3d> objPoints = {
     cv::Mat3d cameraMat = (
-        cv::Mat_<double>(3,3) << cameraK[0][0], cameraK[1][0], cameraK[2][0],
+        cv::Mat_<cv::Vec<double,3>>(3,3) << cameraK[0][0], cameraK[1][0], cameraK[2][0],
             cameraK[0][1], cameraK[1][1], cameraK[2][1],
             cameraK[0][2], cameraK[1][2], cameraK[2][2]
     );
