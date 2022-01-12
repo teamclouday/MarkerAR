@@ -1,5 +1,8 @@
 #include "camera.hpp"
 #include "model.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#include <vector>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -175,5 +178,162 @@ bool Model::loadObj(
         }
     }
     if(vertices.size() == 0 || indices.size() == 0) return false;
+    return true;
+}
+
+// TODO: further optimize this to include index buffer
+bool Model::loadObj(
+    const std::string& filename,
+    // vertex position, normal, and uv
+    std::vector<float>& buffer
+    // std::vector<std::tuple<glm::vec3,glm::vec3,glm::vec2>>& buffer
+)
+{
+    // read file
+    std::ifstream inFile(filename.c_str());
+    if(!inFile.good())
+    {
+        std::cout << "Failed to read obj file: " << filename << std::endl;
+        return false;
+    }
+    char skip = '/';
+    std::string type;
+    float floatVal = 0.0f;
+    int uintVal = 0;
+    std::string line;
+    std::stringstream sstr;
+    // prepare array
+    buffer.resize(0);
+    buffer.clear();
+    // temporary buffer (offset by 1)
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uvs;
+    glm::vec3 vertex(0.0f);
+    glm::vec3 normal(0.0f);
+    glm::vec2 uv(0.0f);
+    glm::uvec3 face(0);
+
+    unsigned int faceCount = 0;
+    // start reading
+    while(std::getline(inFile, line))
+    {
+        sstr.clear();
+        sstr.str(line);
+        if(!(sstr >> type)) continue;
+        if(type == "v")
+        {
+            if(sstr >> floatVal)
+                vertex.x = floatVal;
+            else continue;
+            if(sstr >> floatVal)
+                vertex.y = floatVal;
+            else continue;
+            if(sstr >> floatVal)
+                vertex.z = floatVal;
+            else continue;
+            vertices.push_back(vertex);
+        }
+        else if(type == "vn")
+        {
+            if(sstr >> floatVal)
+                normal.x = floatVal;
+            else continue;
+            if(sstr >> floatVal)
+                normal.y = floatVal;
+            else continue;
+            if(sstr >> floatVal)
+                normal.z = floatVal;
+            else continue;
+            normals.push_back(normal);
+        }
+        else if(type == "vt")
+        {
+            if(sstr >> floatVal)
+                uv.x = floatVal;
+            else continue;
+            if(sstr >> floatVal)
+                uv.y = floatVal;
+            else continue;
+            uvs.push_back(uv);
+        }
+        else if(type == "f")
+        {
+            faceCount++;
+            size_t verticesSize = vertices.size();
+            size_t uvsSize = uvs.size();
+            size_t normalsSize = normals.size();
+            int vertexIdx[3], uvIdx[3], normalIdx[3];
+            if((sstr >> uintVal) && uintVal <= verticesSize)
+                vertexIdx[0] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= uvsSize)
+                uvIdx[0] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= normalsSize)
+                normalIdx[0] = uintVal;
+            else continue;
+
+            if((sstr >> uintVal) && uintVal <= verticesSize)
+                vertexIdx[1] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= uvsSize)
+                uvIdx[1] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= normalsSize)
+                normalIdx[1] = uintVal;
+            else continue;
+
+            if((sstr >> uintVal) && uintVal <= verticesSize)
+                vertexIdx[2] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= uvsSize)
+                uvIdx[2] = uintVal;
+            else continue;
+            if(!(sstr >> skip)) continue;
+            if((sstr >> uintVal) && uintVal <= normalsSize)
+                normalIdx[2] = uintVal;
+            else continue;
+
+            for(int i = 0; i < 3; i++)
+            {
+                buffer.push_back(vertices[vertexIdx[i]-1].x);
+                buffer.push_back(vertices[vertexIdx[i]-1].y);
+                buffer.push_back(vertices[vertexIdx[i]-1].z);
+
+                buffer.push_back(normals[normalIdx[i]-1].x);
+                buffer.push_back(normals[normalIdx[i]-1].y);
+                buffer.push_back(normals[normalIdx[i]-1].z);
+
+                buffer.push_back(uvs[uvIdx[i]-1].x);
+                buffer.push_back(uvs[uvIdx[i]-1].y);
+            }
+        }
+    }
+    if(buffer.size() == 0) return false;
+    return true;
+}
+
+bool Model::loadTexture(const std::string& filename, GLuint& texIdx)
+{
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb);
+    if(!data) return false;
+    glGenTextures(1, &texIdx);
+    glBindTexture(GL_TEXTURE_2D, texIdx);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, channels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
     return true;
 }

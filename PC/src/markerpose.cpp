@@ -10,7 +10,7 @@
 
 // refer to: https://www.dropbox.com/s/qkulg4j64lyn0qa/2018_proj_geo_for_cv_projcv_assignment.pdf?dl=0
 // update computed rotation matrix
-void updateRotation(glm::mat4x3& M)
+void updateRotationSVD(glm::mat4x3& M)
 {
     Eigen::Matrix3f R;
     R << M[0][0], M[1][0], M[2][0],
@@ -27,9 +27,47 @@ void updateRotation(glm::mat4x3& M)
     M[2][0] = R.col(2)[0];
     M[2][1] = R.col(2)[1];
     M[2][2] = R.col(2)[2];
-    M[0] = glm::normalize(M[0]);
-    M[1] = glm::normalize(M[1]);
-    M[2] = glm::cross(M[0], M[1]);
+}
+
+// refer to https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.895.2324&rep=rep1&type=pdf
+// update to Tait-Bryan rotation matrix
+void updateRotationTaitBryan(glm::mat4x3& M)
+{
+    float theta = -std::asin(M[2][0]);
+    float thetaS = std::sin(theta);
+    float thetaC = std::cos(theta);
+    float psi = std::asin(M[1][0] / thetaC);
+    float psiS = std::sin(psi);
+    float psiC = std::cos(psi);
+    float phi = std::asin(M[2][1] / thetaC);
+    float phiS = std::sin(phi);
+    float phiC = std::cos(phi);
+
+    M[0][0] = thetaC * psiC;
+    M[1][0] = thetaC * psiS;
+    M[2][0] = -thetaS;
+
+    M[0][1] = phiS * thetaS * psiC - phiC * psiS;
+    M[1][1] = phiS * thetaS * psiS + phiC * psiC;
+    M[2][1] = phiS * thetaC;
+
+    M[0][2] = phiC * thetaS * psiC + phiS * psiS;
+    M[1][2] = phiC * thetaS * psiS - phiS * psiC;
+    M[2][2] = phiC * thetaC;
+}
+
+// refer to: https://stackoverflow.com/questions/12463487/obtain-rotation-axis-from-rotation-matrix-and-translation-vector-in-opencv
+void updateRotationEuclidean(glm::mat4x3& M)
+{
+    // obtain rotation angle
+    float angle = std::acos(0.5f * (M[0][0] + M[1][1] + M[2][2] - 1.0f));
+    // obtain axis
+    glm::vec3 axis = glm::vec3(M[1][2] - M[2][1], M[2][0] - M[0][2], M[0][1] - M[1][0]);
+    axis = glm::normalize(axis);
+    glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, axis);
+    M[0][0] = rot[0][0]; M[1][0] = rot[1][0]; M[2][0] = rot[2][0];
+    M[0][1] = rot[0][1]; M[1][1] = rot[1][1]; M[2][1] = rot[2][1];
+    M[0][2] = rot[0][2]; M[1][2] = rot[1][2]; M[2][2] = rot[2][2];
 }
 
 // compute reprojection error
@@ -42,6 +80,7 @@ float reprojectionError(
     float error = 0.0f;
     for(size_t i = 0; i < 4; i++)
     {
+        // auto projected = M * glm::vec4(objPoints[i], 0.0f, 1.0f);
         auto projected = cameraK * M * glm::vec4(objPoints[i], 0.0f, 1.0f);
         float dx = projected.x - imgPoints[i].x;
         float dy = projected.y - imgPoints[i].y;
@@ -94,9 +133,9 @@ void decomposeHomoMatrixZhang(
          hHat[0][1], hHat[1][1], hHat[2][1],
          hHat[0][2], hHat[1][2], hHat[2][2];
     Eigen::EigenSolver<Eigen::MatrixXf> eigenSolver;
-    eigenSolver.compute(H, false);
-    float gamma = eigenSolver.eigenvalues().real()[1];
-    H = H / gamma; // scale by lambda2
+    // eigenSolver.compute(H, false);
+    // float gamma = eigenSolver.eigenvalues().real()[1];
+    // H = H / gamma; // scale by lambda2
     // H^TH = V A V^T and solve for eigenvalues and eigenvectors
     // H = H.transpose() * H;
     eigenSolver.compute(H, true);
@@ -304,14 +343,13 @@ void decomposeHomoMatrixInternet(
 )
 {
     H = cameraInvK * H;
-    float tnorm = (glm::length(H[0]) + glm::length(H[1])) * 0.5f;
+    float tnorm = 2.0f / (glm::length(H[0]) + glm::length(H[1]));
     // set translation
-    outputM[3] = H[2] / tnorm;
+    outputM[3] = tnorm * H[2];
     // set rotations
     outputM[0] = glm::normalize(H[0]);
     outputM[1] = glm::normalize(H[1]);
-    // outputM[2] = glm::cross(outputM[0], outputM[1]);
-    outputM[2] = glm::normalize(glm::cross(outputM[0], outputM[1]));
+    outputM[2] = glm::cross(outputM[0], outputM[1]);
 }
 
 // refer to https://gist.github.com/inspirit/740979/97f54a63eb5f61f8f2eb578d60eb44839556ff3f
@@ -321,13 +359,11 @@ void decomposeHomoMatrixInternet2(
 {
     H = cameraInvK * H;
     float lambda = 1.0f / glm::length(H[0]);
-    H *= lambda;
-    // float tnorm = (glm::length(H[0]) + glm::length(H[1])) * 0.5f;
     // set translation
-    outputM[3] = H[2];
+    outputM[3] = lambda * H[2];
     // set rotations
-    outputM[0] = H[0];
-    outputM[1] = H[1];
+    outputM[0] = lambda * H[0];
+    outputM[1] = lambda * H[1];
     outputM[2] = glm::cross(outputM[0], outputM[1]);
 }
 
@@ -424,12 +460,13 @@ void decomposeHomoMatrixStanford(
 }
 
 // scale the estimated projection matrix
-void scalePoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q, const glm::vec2& p)
+float scalePoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q, const glm::vec2& p)
 {
     auto tmp = cameraK * M * glm::vec4(q, 0.0f, 1.0f);
     float scale = std::abs(p.x / tmp.x);
     // float scale = (p.x / tmp.x + p.y / tmp.y) * 0.5f;
     M *= scale;
+    return scale;
 }
 
 void testPoseM(const glm::mat3& cameraK, glm::mat4x3& M, const glm::vec2& q)
@@ -509,7 +546,7 @@ void Marker::estimatePoseSVD(
     // decomposeHomoMatrixInternet2(cameraK, cameraInvK, H, _poseM);
     // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
     // updateRotation(_poseM);
-    scalePoseM(cameraK, _poseM, q3, p3);
+    _err_scale = scalePoseM(cameraK, _poseM, q3, p3);
     // if(_poseMRefined[2][2] != 0.0f)
     //     _poseM = (_poseMRefined * 0.8f + _poseM * 0.2f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
@@ -573,11 +610,14 @@ void Marker::estimatePoseLinear(
     std::vector<glm::vec2> objPoints = {q1, q2, q3, q4};
     std::vector<glm::vec2> imgPoints = {p1, p2, p3, p4};
     // decomposeHomoMatrixStanford(cameraK, cameraInvK, H, _poseM);
-    decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
-    // decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixARBook(cameraK, cameraInvK, H, _poseM);
+    decomposeHomoMatrixInternet(cameraK, cameraInvK, H, _poseM);
+    // decomposeHomoMatrixInternet2(cameraK, cameraInvK, H, _poseM);
     // decomposeHomoMatrixDuke(cameraK, cameraInvK, objPoints, imgPoints, H, _poseM);
     // updateRotation(_poseM);
-    scalePoseM(cameraK, _poseM, q1, p1);
+    // updateRotationTaitBryan(_poseM);
+    // updateRotationEuclidean(_poseM);
+    _err_scale = scalePoseM(cameraK, _poseM, q1, p1);
     // if(_poseMRefined[2][2] != 0.0f)
     //     _poseM = (_poseMRefined * 0.6f + _poseM * 0.4f);
     refinePoseM(cameraInvK, objPoints, imgPoints);
@@ -636,7 +676,7 @@ void Marker::estimatePoseOpenCV(
         glm::vec3(rotMat.at<float>(0,2), rotMat.at<float>(1,2), rotMat.at<float>(2,2)),
         glm::vec3(tvec.at<float>(0,0), tvec.at<float>(0,1), tvec.at<float>(0,2))
     );
-    scalePoseM(cameraK, _poseM, glm::vec2(-1.0f, -1.0f), glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y));
+    _err_scale = scalePoseM(cameraK, _poseM, glm::vec2(-1.0f, -1.0f), glm::vec2(_marker_borderp1p2.x, _marker_borderp1p2.y));
     // refinePoseM(cameraK, cameraInvK, objPoints, imgPoints);
     // std::cout << "Reproj Err " << reprojectionError(cameraK, _poseMRefined, objPoints, imgPoints) << std::endl;
 }

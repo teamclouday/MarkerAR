@@ -13,9 +13,7 @@ void main()
     vec3 norm = normalize(cross(dFdxPos,dFdyPos));
 
     vec3 dir = -normalize(lightPos);
-    float coeff = max(0.0, dot(norm, dir));
-    
-    vec3 ambient = diffuse * 0.1;
+    float coeff = clamp(dot(norm, dir), 0.4, 1.0);
 
-    color = vec4(ambient + diffuse * coeff, 1.0);
+    color = vec4(diffuse * coeff, 1.0);
 }

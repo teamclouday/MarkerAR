@@ -77,6 +77,7 @@ void Marker::UIpose()
     ImGui::Separator();
     ImGui::Text("Reprojection Error: %.3f", _err_reproj);
     ImGui::Text("Levenberg Error: %.3f", _err_LM);
+    ImGui::Text("Scale Factor: %.3f", _err_scale);
 }
 
 void ModelCube::UI()
@@ -139,4 +140,16 @@ void ModelArmadillo::UI()
     ImGui::Separator();
     ImGui::DragFloat3("Light Pos", &_lightPos[0], 0.01f);
     ImGui::ColorEdit3("Diffuse", &_model_diffuse[0]);
+}
+
+void ModelSpiderMan::UI()
+{
+    ImGui::Text("Spider Man");
+    ImGui::Separator();
+    ImGui::Checkbox("Linestyle", &_lineMode);
+    ImGui::Separator();
+    ImGui::DragFloat3("Translation", &_translation[0], 0.01f, -10.0f, 10.0f, "%.2f");
+    ImGui::DragFloat("Scale", &_scale, 0.001f, 0.001f, 100.0f, "%.3f");
+    ImGui::Separator();
+    ImGui::DragFloat3("Light Pos", &_lightPos[0], 0.01f);
 }

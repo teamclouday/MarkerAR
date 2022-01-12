@@ -16,8 +16,10 @@ void main()
 {
     vertColor = inColor;
     vec4 pos = modelMat * vec4(inPos, 1.0);
-    pos.yz = vec2(pos.z, -pos.y);
-    vec3 screenPos = cameraK * poseM * pos;
+    pos.yz = pos.zy * vec2(1.0, -1.0);
+    vec3 screenPos = poseM * pos;
+    screenPos.xy -= 0.5 * screenPos.z;
+    screenPos = cameraK * screenPos;
     // refer to https://nghiaho.com/?p=2559
     pos = cameraProj * vec4(screenPos, 1.0);
     if(ratio_img > ratio_win)
@@ -28,5 +30,5 @@ void main()
     {
         pos.x = pos.x * ratio_img / ratio_win;
     }
-    gl_Position = vec4(pos.xy, screenPos.z, 1.0);
+    gl_Position = vec4(pos.xy, screenPos.z+1.0, 1.0);
 }

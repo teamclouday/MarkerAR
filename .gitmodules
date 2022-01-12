@@ -13,3 +13,6 @@
 [submodule "PC/external/eigen"]
 	path = PC/external/eigen
 	url = https://gitlab.com/teamclouday/eigen.git
+[submodule "PC/external/stb"]
+	path = PC/external/stb
+	url = https://github.com/nothings/stb.git

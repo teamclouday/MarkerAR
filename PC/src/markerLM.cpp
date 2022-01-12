@@ -7,7 +7,7 @@
 #include <iostream>
 
 #define ERROR_EPS       0.001
-#define MAX_ITER        30
+#define MAX_ITER        10
 
 /////////////////////////////////////////////////////////////////
 // objective: min(sum(p - K M q)^2)

@@ -1,7 +1,8 @@
 #version 450 core
 
 layout (location = 0) in vec3 inPos;
-layout (location = 0) out vec3 worldPos;
+layout (location = 1) in vec3 inNormal;
+layout (location = 2) in vec2 inUV;
 
 uniform float ratio_img;
 uniform float ratio_win;
@@ -10,11 +11,20 @@ uniform mat4 modelMat;
 uniform mat3 cameraK;
 uniform mat4 cameraProj;
 
+layout (location = 0) out Data
+{
+    vec3 pos;
+    vec3 normal;
+    vec2 uv;
+} VertexOut;
+
 void main()
 {
+    VertexOut.uv = inUV;
+    VertexOut.normal = normalize(inNormal);
     // change Z up coordinate to Y up
     vec4 pos = modelMat * vec4(inPos, 1.0);
-    worldPos = pos.xyz;
+    VertexOut.pos = pos.xyz;
     pos.yz = pos.zy * vec2(1.0, -1.0);
     vec3 screenPos = poseM * pos;
     screenPos.xy -= 0.5 * screenPos.z;

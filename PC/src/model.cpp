@@ -408,3 +408,87 @@ void ModelArmadillo::render(
     if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_DEPTH_TEST);
 }
+
+
+ModelSpiderMan::ModelSpiderMan(int camWidth, int camHeight)
+{
+    _width = camWidth;
+    _height = camHeight;
+    // load obj data
+    std::vector<float> buffer;
+    if(!loadObj("models/spider-man/modified.obj", buffer))
+        throw std::runtime_error("Failed to load spiderman!");
+    _count = static_cast<int>(buffer.size() / 8);
+    // create array buffers
+    GLuint vbo;
+    glGenVertexArrays(1, &_vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size()*sizeof(float), buffer.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glBindVertexArray(0);
+    // load textures
+    if(!loadTexture("models/spider-man/SpiderMan_NRML.jpg", _texNormal))
+        throw std::runtime_error("Failed to load SpiderMan_NRML.jpg!");
+    if(!loadTexture("models/spider-man/SpiderMan_Spec.jpg", _texSpec))
+        throw std::runtime_error("Failed to load SpiderMan_Spec.jpg!");
+    if(!loadTexture("models/spider-man/SpiderMan_TXT.jpg", _texColor))
+        throw std::runtime_error("Failed to load SpiderMan_TXT.jpg!");
+    // load shaders
+    _shader = std::make_shared<Shader>();
+    _shader->add("shaders/spider.lighted.vert.glsl", GL_VERTEX_SHADER);
+    _shader->add("shaders/spider.lighted.frag.glsl", GL_FRAGMENT_SHADER);
+    _shader->compile();
+    _lineMode = false;
+}
+
+ModelSpiderMan::~ModelSpiderMan()
+{
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteTextures(1, &_texNormal);
+    glDeleteTextures(1, &_texSpec);
+    glDeleteTextures(1, &_texColor);
+}
+
+
+void ModelSpiderMan::render(
+    const glm::mat3& cameraK, const glm::mat4x3& poseM,
+    const glm::mat4& cameraProj,
+    float cameraRatio, float windowRatio
+)
+{
+    glEnable(GL_DEPTH_TEST);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glUseProgram(_shader->program());
+    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), _translation) *
+        glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(_scale));
+    _shader->uniformMat4x3("poseM", poseM);
+    _shader->uniformMat4x4("modelMat", modelMatrix);
+    _shader->uniformMat4x4("cameraProj", cameraProj);
+    _shader->uniformMat3x3("cameraK", cameraK);
+    _shader->uniformFloat("ratio_img", cameraRatio);
+    _shader->uniformFloat("ratio_win", windowRatio);
+    _shader->uniformVec3("lightPos", _lightPos);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _texColor);
+    _shader->uniformInt("colorMap", 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _texNormal);
+    _shader->uniformInt("normalMap", 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, _texSpec);
+    _shader->uniformInt("specMap", 2);
+    glBindVertexArray(_vao);
+    glDrawArrays(GL_TRIANGLES, 0, _count);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    if(_lineMode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_DEPTH_TEST);
+}
