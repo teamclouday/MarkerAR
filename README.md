@@ -130,3 +130,15 @@ where `lambda` is a damping factor adjusted at each iteration.
 Finally, iteratively solve for `d` and update `M` until max iterations or minimum error.
 
 Further details can be found in `PC/src/markerLM.cpp`.
+
+### Some Debugging
+
+The above does not work perfectly in my implementation.  
+When Y-axis (in OpenGL coordinate) value increases, the projected points tend to move to lower left (45 degrees). And this is independent of the camera rotation.  
+After a long time of debugging, I can't figure out why, but a quick fix is the following:
+```glsl
+vec3 screenPos = poseM * pos;
+screenPos.xy -= 0.5 * screenPos.z;
+```
+After projecting a point, shift its XY values by half of its Z value, and now it looks perfect!  
+This bug should be caused by the transformation matrix `M`, which then traces back to homography approximation and decomposition. A lot more to learn to understand why.

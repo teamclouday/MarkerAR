@@ -28,7 +28,7 @@ int main()
             cam->width(),
             cam->height()
         );
-        model = std::make_shared<ModelSpiderMan>(
+        model = std::make_shared<ModelBunny>(
             cam->width(),
             cam->height()
         );
@@ -94,7 +94,7 @@ int main()
             cam->groupY()
         );
         // estimate pose
-        marker->estimatePoseLinear(
+        marker->estimatePoseSVD(
             cam->cameraK(),
             cam->cameraInvK(),
             cam->cameraDistK(),
