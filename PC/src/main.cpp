@@ -28,7 +28,7 @@ int main()
             cam->width(),
             cam->height()
         );
-        model = std::make_shared<ModelBunny>(
+        model = std::make_shared<ModelTyra>(
             cam->width(),
             cam->height()
         );

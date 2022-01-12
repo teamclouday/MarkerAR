@@ -121,7 +121,7 @@ void Marker::refinePoseM(
         Eigen::Map<Eigen::VectorXf> residualVec(residual.data(), residual.size());
         for(int i = 0; i < 12; i++)
             err += residualVec[i] * residualVec[i];
-        // std::cout << iter << "|" << err << std::endl;
+        // std::cout << iter << "," << lambdaLog10 << "|" << err << std::endl;
         if(err <= ERROR_EPS) break;
         if(err > prevErr)
         {
@@ -134,11 +134,24 @@ void Marker::refinePoseM(
     }
     _err_LM = err;
     // std::cout << "LM err: " << err << "(" << iter << ")" << std::endl;
-    // record new M
-    _poseMRefined = glm::mat4x3(
-        glm::vec3(M.col(0)[0], M.col(0)[1], M.col(0)[2]),
-        glm::vec3(M.col(1)[0], M.col(1)[1], M.col(1)[2]),
-        glm::vec3(M.col(2)[0], M.col(2)[1], M.col(2)[2]),
-        glm::vec3(M.col(3)[0], M.col(3)[1], M.col(3)[2])
-    );
+    // record new M and interpolate
+    if(_poseMRefined[3][2] == 0.0f)
+    {
+        _poseMRefined = glm::mat4x3(
+            glm::vec3(M.col(0)[0], M.col(0)[1], M.col(0)[2]),
+            glm::vec3(M.col(1)[0], M.col(1)[1], M.col(1)[2]),
+            glm::vec3(M.col(2)[0], M.col(2)[1], M.col(2)[2]),
+            glm::vec3(M.col(3)[0], M.col(3)[1], M.col(3)[2])
+        );
+    }
+    else
+    {
+        _poseMRefined = _poseM_interpolate * _poseMRefined +
+            (1.0f - _poseM_interpolate) * glm::mat4x3(
+            glm::vec3(M.col(0)[0], M.col(0)[1], M.col(0)[2]),
+            glm::vec3(M.col(1)[0], M.col(1)[1], M.col(1)[2]),
+            glm::vec3(M.col(2)[0], M.col(2)[1], M.col(2)[2]),
+            glm::vec3(M.col(3)[0], M.col(3)[1], M.col(3)[2])
+        );
+    }
 }

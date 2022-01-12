@@ -78,6 +78,8 @@ void Marker::UIpose()
     ImGui::Text("Reprojection Error: %.3f", _err_reproj);
     ImGui::Text("Levenberg Error: %.3f", _err_LM);
     ImGui::Text("Scale Factor: %.3f", _err_scale);
+    ImGui::Separator();
+    ImGui::DragFloat("Pose Interpolation", &_poseM_interpolate, 0.001f, 0.0f, 1.0f, "%.3f");
 }
 
 void ModelCube::UI()

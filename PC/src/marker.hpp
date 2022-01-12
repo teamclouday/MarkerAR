@@ -90,6 +90,7 @@ private:
     // variable for pose estimation
     glm::mat4x3 _poseM = glm::mat4x3(0.0f);
     glm::mat4x3 _poseMRefined = glm::mat4x3(0.0f);
+    float _poseM_interpolate = 0.6f;
     float _err_reproj = 0.0f, _err_LM = 0.0f, _err_scale = 0.0f;
 
     int _debug_level = 0;
