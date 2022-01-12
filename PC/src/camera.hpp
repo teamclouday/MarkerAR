@@ -15,16 +15,17 @@ class Camera
 public:
     Camera()
     {
+        int cameraId, cameraAPI;
+        getValidSecondaryCamera(cameraId, cameraAPI);
         // try to open camera
         // first try directshow for Windows
         // next try V4L2 for Linux
         // finally autodetect
-        if(!_cam.open(0, cv::CAP_DSHOW) &&
-           !_cam.open(0, cv::CAP_V4L2) &&
-           !_cam.open(0, cv::CAP_ANY))
+        if(!_cam.open(cameraId, cameraAPI))
             throw std::runtime_error("Failed to open camera!");
         _backend = _cam.getBackendName();
         // set properties
+        _cam.set(cv::CAP_PROP_FPS, 30.0);
         _cam.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
         _cam.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
         _width = static_cast<int>(_cam.get(cv::CAP_PROP_FRAME_WIDTH));
@@ -79,6 +80,7 @@ public:
 
     ~Camera()
     {
+        _cam.release();
         glDeleteTextures(2, _tex);
         glDeleteVertexArrays(1, &_vao);
     }
@@ -163,4 +165,5 @@ private:
     glm::mat4 _camProj;
 
     void loadCameraData();
+    void getValidSecondaryCamera(int& cameraId, int& apiPreference);
 };

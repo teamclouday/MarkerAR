@@ -8,6 +8,39 @@
 #include <fstream>
 #include <iostream>
 
+void Camera::getValidSecondaryCamera(
+    int& cameraId, int& apiPreference
+)
+{
+    cv::VideoCapture tmp;
+#ifdef linux
+    cameraId = 5;
+#else
+    cameraId = 0;
+#endif
+    for(; cameraId >= 0; cameraId--)
+    {
+        if(tmp.open(cameraId, cv::CAP_DSHOW))
+        {
+            apiPreference = cv::CAP_DSHOW;
+            tmp.release();
+            break;
+        }
+        else if(tmp.open(cameraId, cv::CAP_V4L2))
+        {
+            apiPreference = cv::CAP_V4L2;
+            tmp.release();
+            break;
+        }
+        else if(tmp.open(cameraId, cv::CAP_ANY))
+        {
+            apiPreference = cv::CAP_ANY;
+            tmp.release();
+            break;
+        }
+    }
+}
+
 void Camera::loadCameraData()
 {
     const std::string filename = "camera.txt";
@@ -199,7 +232,7 @@ bool Model::loadObj(
     char skip = '/';
     std::string type;
     float floatVal = 0.0f;
-    int uintVal = 0;
+    unsigned int uintVal = 0;
     std::string line;
     std::stringstream sstr;
     // prepare array
