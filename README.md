@@ -19,6 +19,9 @@ The marker I'm using is simply like this:
 
 <img src="Images/marker.png" width="200" alt="marker">
 
+<details>
+<summary>Detailed Steps</summary>
+
 1. Convert image to gray scale on GPU compute shader  
    Dot product of image color with `(0.299, 0.587, 0.114)`  
    Optionally, I also have applied a simple blur to make image stable  
@@ -35,10 +38,14 @@ The marker I'm using is simply like this:
    Similar to OpenCV's Ramer–Douglas–Peucker algorithm but simpler  
 
 5. Determine orientation by sampling near the corners
+</details>
 
 ### Pose Estimation
 
 Starting from here, you will need to calibrate your webcam and get intrinsic matrix and distortion coefficients. I use OpenCV to do this step since it is convenient. Details can be found in `OpenCV/camera.py`.
+
+<details>
+<summary>Some Math</summary>
 
 Let's say your have the 3x3 camera matrix `K`, 4 detected marker corners on camera image are `p`.  
 Corners in virtual world space are `q` (usually something like `[1,1,0,1]`).  
@@ -96,12 +103,16 @@ Besides, you may also need to undistort `p` first given camera distortion coeffi
 Finally, for any new point `b` in 3d world space, its mapping on screen will be computed from `K M b`.
 
 Further details of my implementation can be found in `PC/src/markerpose.cpp`.
+</details>
 
 ### Pose Refinement
 
 However, with only homography estimation, the result may have large pixel error, since SVD is just an approximation of the solution of the equation above.  
 
 Suggested by the book, I implemented Levenberg-Marquardt's algorithm to refine the matrix `M`.  
+
+<details>
+<summary>Some More Math</summary>
 
 Let's say the objective is to minimize:
 ```
@@ -130,6 +141,7 @@ where `lambda` is a damping factor adjusted at each iteration.
 Finally, iteratively solve for `d` and update `M` until max iterations or minimum error.
 
 Further details can be found in `PC/src/markerLM.cpp`.
+</details>
 
 ### Some Debugging
 
